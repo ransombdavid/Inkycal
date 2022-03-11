@@ -2,14 +2,14 @@
 
 # Unzip C++ SPI library and driver files
 echo "Unzipping files"
-unzip bcm2835-1.68.zip
+unzip bcm2835-1.71.zip
 unzip IT8951.zip
-rm bcm2835-1.68.zip
+rm bcm2835-1.71.zip
 rm IT8951.zip
 
 # Install C++ SPI library for Raspberry
 echo "Installing C++ SPI library"
-cd bcm2835-1.68
+cd bcm2835-1.71
 chmod +x configure
 ./configure
 make
