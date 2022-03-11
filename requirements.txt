@@ -11,3 +11,4 @@ todoist-python==8.1.2           # todoist api
 yfinance>=0.1.62                # yahoo stocks
 matplotlib==3.4.2               # plotting 
 pygame
+black

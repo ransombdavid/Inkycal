@@ -7,6 +7,7 @@ Copyright by aceisace
 from inkycal.custom import images, top_level
 from os.path import exists
 from PIL import Image
+import subprocess
 
 # Display resolution
 EPD_WIDTH       = 1200
@@ -33,8 +34,8 @@ class EPD:
     """displays an image"""
     try:
       run_command = command.split()
-      run(run_command)
-    except:
+      subprocess.run(run_command)
+    except Exception as e:
       print("oops, something didn't work right :/")
 
   def getbuffer(self, image):

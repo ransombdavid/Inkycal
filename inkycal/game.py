@@ -1,4 +1,5 @@
 # Import the pygame module
+import datetime
 from time import sleep
 
 import pygame
@@ -23,8 +24,8 @@ from pygame.locals import (
 pygame.init()
 
 # Define constants for the screen width and height
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 1200
+SCREEN_HEIGHT = 825
 
 # Create the screen object
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
@@ -32,13 +33,36 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # Variable to keep the main loop running
 running = True
-
+next_available_key_action = datetime.datetime.now()
+refresh_screen = True
 # Main loop
 while running:
-    key1_pressed = False
-    key2_pressed = False
-    key3_pressed = False
-    key4_pressed = False
+    loop_start = datetime.datetime.now()
+
+    # make sure to give a little wiggle room so you don't
+    # kick off the routine multiple times with same keypress
+    if next_available_key_action <= loop_start:
+        key_pressed = False
+        keys = pygame.key.get_pressed()
+
+        if keys[pygame.K_3] and keys[pygame.K_4]:
+            print("3 and 4 pressed")
+            key_pressed = True
+        elif keys[pygame.K_1]:
+            print("1 pressed")
+            key_pressed = True
+        elif keys[pygame.K_2]:
+            print("2 pressed")
+            key_pressed = True
+        elif keys[pygame.K_3]:
+            print("3 pressed")
+            key_pressed = True
+        elif keys[pygame.K_4]:
+            print("4 pressed")
+            key_pressed = True
+
+        if key_pressed:
+            next_available_key_action = datetime.datetime.now() + datetime.timedelta(seconds=2)
 
     # Look at every event in the queue
     for event in pygame.event.get():
@@ -47,34 +71,10 @@ while running:
             # Was it the Escape key? If so, stop the loop.
             if event.key == K_ESCAPE:
                 running = False
-            elif event.key == K_1:
-                key1_pressed = True
-            elif event.key == K_2:
-                key2_pressed = True
-            elif event.key == K_3:
-                key3_pressed = True
-            elif event.key == K_4:
-                key4_pressed = True
         # Did the user click the window close button? If so, stop the loop.
         elif event.type == QUIT:
             running = False
 
-    if key1_pressed:
-        print("1 pressed")
-    elif key2_pressed:
-        print("2 pressed")
-    elif key3_pressed:
-        print("3 pressed")
-    elif key4_pressed:
-        print("4 pressed")
-
-    keys = pygame.key.get_pressed()
-
-    if keys[pygame.K_3] and keys[pygame.K_4]:
-        print("3 and 4 pressed")
-        # make sure to give a little wiggle room so you don't
-        # kick off the routine multiple times with same keypress
-        sleep(1)
     # Fill the screen with white
     screen.fill((255, 255, 255))
 
