@@ -4,14 +4,16 @@
 Inky-Calendar epaper functions
 Copyright by aceisace
 """
+import os
 from importlib import import_module
 from PIL import Image
 
 from inkycal.custom import top_level
 import glob
 
+
 class Display:
-  """Display class for inkycal
+    """Display class for inkycal
 
   Creates an instance of the driver for the selected E-Paper model and allows
   rendering images and calibrating the E-Paper display
@@ -22,28 +24,28 @@ class Display:
 
   """
 
-  def __init__(self, epaper_model):
-    """Load the drivers for this epaper model"""
+    def __init__(self, epaper_model):
+        """Load the drivers for this epaper model"""
 
-    if 'colour' in epaper_model:
-      self.supports_colour = True
-    else:
-      self.supports_colour = False
+        if "colour" in epaper_model:
+            self.supports_colour = True
+        else:
+            self.supports_colour = False
 
-    try:
-      driver_path = f'inkycal.display.drivers.{epaper_model}'
-      driver = import_module(driver_path)
-      self._epaper = driver.EPD()
-      self.model_name = epaper_model
+        try:
+            driver_path = f"inkycal.display.drivers.{epaper_model}"
+            driver = import_module(driver_path)
+            self._epaper = driver.EPD()
+            self.model_name = epaper_model
 
-    except ImportError:
-      raise Exception('This module is not supported. Check your spellings?')
+        except ImportError:
+            raise Exception("This module is not supported. Check your spellings?")
 
-    except FileNotFoundError:
-      raise Exception('SPI could not be found. Please check if SPI is enabled')
+        except FileNotFoundError:
+            raise Exception("SPI could not be found. Please check if SPI is enabled")
 
-  def render(self, im_black, im_colour = None):
-    """Renders an image on the selected E-Paper display.
+    def render(self, im_black, im_colour=None):
+        """Renders an image on the selected E-Paper display.
 
     Initlializes the E-Paper display, sends image data and executes command
     to update the display.
@@ -79,30 +81,30 @@ class Display:
     >>> display.render(black_image, colour_image)
     """
 
-    epaper = self._epaper
+        epaper = self._epaper
 
-    if self.supports_colour == False:
-      print('Initialising..', end = '')
-      epaper.init()
-      print('Updating display......', end = '')
-      epaper.display(epaper.getbuffer(im_black))
-      print('Done')
+        if self.supports_colour == False:
+            print("Initialising..", end="")
+            epaper.init()
+            print("Updating display......", end="")
+            epaper.display(epaper.getbuffer(im_black))
+            print("Done")
 
-    elif self.supports_colour == True:
-      if not im_colour:
-        raise Exception('im_colour is required for coloured epaper displays')
-      print('Initialising..', end = '')
-      epaper.init()
-      print('Updating display......', end = '')
-      epaper.display(epaper.getbuffer(im_black), epaper.getbuffer(im_colour))
-      print('Done')
+        elif self.supports_colour == True:
+            if not im_colour:
+                raise Exception("im_colour is required for coloured epaper displays")
+            print("Initialising..", end="")
+            epaper.init()
+            print("Updating display......", end="")
+            epaper.display(epaper.getbuffer(im_black), epaper.getbuffer(im_colour))
+            print("Done")
 
-    print('Sending E-Paper to deep sleep...', end = '')
-    epaper.sleep()
-    print('Done')
+        print("Sending E-Paper to deep sleep...", end="")
+        epaper.sleep()
+        print("Done")
 
-  def calibrate(self, cycles=3):
-    """Calibrates the display to retain crisp colours
+    def calibrate(self, cycles=3):
+        """Calibrates the display to retain crisp colours
 
     Flushes the selected display several times with it's supported colours,
     removing any previous effects of ghosting.
@@ -120,42 +122,41 @@ class Display:
     E-Paper displays.
     """
 
-    epaper = self._epaper
-    epaper.init()
+        epaper = self._epaper
+        epaper.init()
 
-    display_size = self.get_display_size(self.model_name)
+        display_size = self.get_display_size(self.model_name)
 
-    white = Image.new('1', display_size, 'white')
-    black = Image.new('1', display_size, 'black')
+        white = Image.new("1", display_size, "white")
+        black = Image.new("1", display_size, "black")
 
-    print('----------Started calibration of ePaper display----------')
-    if self.supports_colour == True:
-      for _ in range(cycles):
-        print('Calibrating...', end= ' ')
-        print('black...', end= ' ')
-        epaper.display(epaper.getbuffer(black), epaper.getbuffer(white))
-        print('colour...', end = ' ')
-        epaper.display(epaper.getbuffer(white), epaper.getbuffer(black))
-        print('white...')
-        epaper.display(epaper.getbuffer(white), epaper.getbuffer(white))
-        print(f'Cycle {_+1} of {cycles} complete')
+        print("----------Started calibration of ePaper display----------")
+        if self.supports_colour == True:
+            for _ in range(cycles):
+                print("Calibrating...", end=" ")
+                print("black...", end=" ")
+                epaper.display(epaper.getbuffer(black), epaper.getbuffer(white))
+                print("colour...", end=" ")
+                epaper.display(epaper.getbuffer(white), epaper.getbuffer(black))
+                print("white...")
+                epaper.display(epaper.getbuffer(white), epaper.getbuffer(white))
+                print(f"Cycle {_ + 1} of {cycles} complete")
 
-    if self.supports_colour == False:
-      for _ in range(cycles):
-        print('Calibrating...', end= ' ')
-        print('black...', end = ' ')
-        epaper.display(epaper.getbuffer(black))
-        print('white...')
-        epaper.display(epaper.getbuffer(white)),
-        print(f'Cycle {_+1} of {cycles} complete')
+        if self.supports_colour == False:
+            for _ in range(cycles):
+                print("Calibrating...", end=" ")
+                print("black...", end=" ")
+                epaper.display(epaper.getbuffer(black))
+                print("white...")
+                epaper.display(epaper.getbuffer(white)),
+                print(f"Cycle {_ + 1} of {cycles} complete")
 
-      print('-----------Calibration complete----------')
-      epaper.sleep()
+            print("-----------Calibration complete----------")
+            epaper.sleep()
 
-
-  @classmethod
-  def get_display_size(cls, model_name):
-    """Returns the size of the display as a tuple -> (width, height)
+    @classmethod
+    def get_display_size(cls, model_name):
+        """Returns the size of the display as a tuple -> (width, height)
 
     Looks inside drivers folder for the given model name, then returns it's
     size.
@@ -170,30 +171,41 @@ class Display:
 
     >>> Display.get_display_size('model_name')
     """
-    if not isinstance(model_name, str):
-      print('model_name should be a string')
-      return
-    else:
-      driver_files = top_level+'/inkycal/display/drivers/*.py'
-      drivers = glob.glob(driver_files)
-      drivers = [i.split('/')[-1].split('.')[0] for i in drivers]
-      drivers.remove('__init__')
-      drivers.remove('epdconfig')
-      if model_name not in drivers:
-        print('This model name was not found. Please double check your spellings')
-        return
-      else:
-        with open(top_level+'/inkycal/display/drivers/'+model_name+'.py') as file:
-          for line in file:
-            if 'EPD_WIDTH=' in line.replace(" ", ""):
-              width = int(line.rstrip().replace(" ", "").split('=')[-1])
-            if 'EPD_HEIGHT=' in line.replace(" ", ""):
-              height = int(line.rstrip().replace(" ", "").split('=')[-1])
-        return width, height
+        if not isinstance(model_name, str):
+            print("model_name should be a string")
+            return
+        else:
+            driver_files = (
+                os.path.join(
+                    os.path.join(os.path.join(top_level, "inkycal"), "display"),
+                    "drivers",
+                )
+                + os.sep
+                + "*.py"
+            )
+            drivers = glob.glob(driver_files)
+            drivers = [i.split(os.sep)[-1].split(".")[0] for i in drivers]
+            drivers.remove("__init__")
+            drivers.remove("epdconfig")
+            if model_name not in drivers:
+                print(
+                    "This model name was not found. Please double check your spellings"
+                )
+                return
+            else:
+                with open(
+                    top_level + "/inkycal/display/drivers/" + model_name + ".py"
+                ) as file:
+                    for line in file:
+                        if "EPD_WIDTH=" in line.replace(" ", ""):
+                            width = int(line.rstrip().replace(" ", "").split("=")[-1])
+                        if "EPD_HEIGHT=" in line.replace(" ", ""):
+                            height = int(line.rstrip().replace(" ", "").split("=")[-1])
+                return width, height
 
-  @classmethod
-  def get_display_names(cls):
-    """Prints all supported E-Paper models.
+    @classmethod
+    def get_display_names(cls):
+        """Prints all supported E-Paper models.
 
     Fetches all filenames in driver folder and prints them on the console.
 
@@ -207,13 +219,13 @@ class Display:
 
     >>> Display.get_display_names()
     """
-    driver_files = top_level+'/inkycal/display/drivers/*.py'
-    drivers = glob.glob(driver_files)
-    drivers = [i.split('/')[-1].split('.')[0] for i in drivers]
-    drivers.remove('__init__')
-    drivers.remove('epdconfig')
-    print(*drivers, sep='\n')
+        driver_files = top_level + "/inkycal/display/drivers/*.py"
+        drivers = glob.glob(driver_files)
+        drivers = [i.split("/")[-1].split(".")[0] for i in drivers]
+        drivers.remove("__init__")
+        drivers.remove("epdconfig")
+        print(*drivers, sep="\n")
 
-if __name__ == '__main__':
-  print("Running Display class in standalone mode")
 
+if __name__ == "__main__":
+    print("Running Display class in standalone mode")

@@ -1,47 +1,53 @@
 # Import the pygame module
 import datetime
+import logging
+import os
+import time
+import traceback
 from time import sleep
 
+import arrow
 import pygame
-
 
 # Import pygame.locals for easier access to key coordinates
 
 # Updated to conform to flake8 and black standards
 
 from pygame.locals import (
-    K_1,
-    K_2,
-    K_3,
-    K_4,
     K_ESCAPE,
     KEYDOWN,
     QUIT,
 )
 
+from inkycal.custom import get_system_tz
+from main import Inkycal
+
+filename = os.path.basename(__file__).split('.py')[0]
+logger = logging.getLogger(filename)
 
 # Initialize pygame
 pygame.init()
-
-# Define constants for the screen width and height
-SCREEN_WIDTH = 1200
-SCREEN_HEIGHT = 825
-
-# Create the screen object
-# The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-
+inky = Inkycal(settings_path="C:\\development\\settings.json", render=True, optimize=False)
+inky.test()
 # Variable to keep the main loop running
 running = True
-next_available_key_action = datetime.datetime.now()
-refresh_screen = True
+next_available_key_action = None
+refresh_screen = False
+
+# Get the time of initial run
+runtime = arrow.now()
+time_to_next_refresh = None
 # Main loop
 while running:
-    loop_start = datetime.datetime.now()
+    loop_start = arrow.now(tz=get_system_tz())
+    if not time_to_next_refresh or time_to_next_refresh < loop_start:
+        print("Haven't refreshed yet" if not time_to_next_refresh else "Time to refresh now")
+        refresh_screen = True
+        time_to_next_refresh = loop_start
 
     # make sure to give a little wiggle room so you don't
     # kick off the routine multiple times with same keypress
-    if next_available_key_action <= loop_start:
+    if not next_available_key_action or next_available_key_action <= loop_start:
         key_pressed = False
         keys = pygame.key.get_pressed()
 
@@ -51,6 +57,7 @@ while running:
         elif keys[pygame.K_1]:
             print("1 pressed")
             key_pressed = True
+            refresh_screen = True
         elif keys[pygame.K_2]:
             print("2 pressed")
             key_pressed = True
@@ -62,7 +69,7 @@ while running:
             key_pressed = True
 
         if key_pressed:
-            next_available_key_action = datetime.datetime.now() + datetime.timedelta(seconds=2)
+            next_available_key_action = arrow.now(tz=get_system_tz()).shift(seconds=+2)
 
     # Look at every event in the queue
     for event in pygame.event.get():
@@ -75,18 +82,11 @@ while running:
         elif event.type == QUIT:
             running = False
 
-    # Fill the screen with white
-    screen.fill((255, 255, 255))
-
-    # Create a surface and pass in a tuple containing its length and width
-    surf = pygame.Surface((50, 50))
-
-    # Give the surface a color to separate it from the background
-    surf.fill((0, 0, 0))
-
-    rect = surf.get_rect()
-    # This line says "Draw surf onto the screen at the center"
-    screen.blit(surf, (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
+    if refresh_screen:
+        inky.run_once()
+        seconds_before_next_update = inky.countdown()
+        time_to_next_refresh = loop_start.shift(seconds=seconds_before_next_update)
+        print(f"Time to next refresh: {time_to_next_refresh.format()}")
+        refresh_screen = False
 
     pygame.display.flip()
-
