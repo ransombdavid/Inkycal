@@ -51,12 +51,6 @@ class DogTracker(inkycal_module):
             if not param in config:
                 raise Exception(f"config is missing {param}")
 
-        # required parameters
-        self.api_key = config["api_key"]
-        self.location = config["location"]
-
-        # optional parameters
-
         # additional configuration
         self.timezone = get_system_tz()
         self.db_file_path = os.path.join(os.path.join(top_level, "db"), "dogtracker.db")
