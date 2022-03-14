@@ -1,17 +1,8 @@
-# Import the pygame module
-import datetime
 import logging
 import os
-import time
-import traceback
-from time import sleep
 
 import arrow
 import pygame
-
-# Import pygame.locals for easier access to key coordinates
-
-# Updated to conform to flake8 and black standards
 
 from pygame.locals import (
     K_ESCAPE,
@@ -28,7 +19,7 @@ logger = logging.getLogger(filename)
 # Initialize pygame
 pygame.init()
 inky = Inkycal(settings_path="C:\\development\\settings.json", render=True, optimize=False)
-inky.test()
+# inky.test()
 # Variable to keep the main loop running
 running = True
 next_available_key_action = None
@@ -83,6 +74,7 @@ while running:
             running = False
 
     if refresh_screen:
+        print("Refreshing the screen")
         inky.run_once()
         seconds_before_next_update = inky.countdown()
         time_to_next_refresh = loop_start.shift(seconds=seconds_before_next_update)
