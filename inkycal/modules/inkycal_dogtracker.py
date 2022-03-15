@@ -182,37 +182,30 @@ class DogTracker(inkycal_module):
 
         # Draw lines on each row and border
         ############################################################################
-        ##    draw = ImageDraw.Draw(im_black)
-        ##    draw.line((0, 0, im_width, 0), fill='red')
-        ##    draw.line((0, im_height-1, im_width, im_height-1), fill='red')
-        ##    draw.line((0, row1, im_width, row1), fill='black')
-        ##    draw.line((0, row1+row_height, im_width, row1+row_height), fill='black')
-        ##    draw.line((0, row2, im_width, row2), fill='black')
-        ##    draw.line((0, row2+row_height, im_width, row2+row_height), fill='black')
-        ##    draw.line((0, row3, im_width, row3), fill='black')
-        ##    draw.line((0, row3+row_height, im_width, row3+row_height), fill='black')
+        draw = ImageDraw.Draw(im_black)
+        draw.line((0, 0, im_width, 0), fill='red')
+        draw.line((0, im_height-1, im_width, im_height-1), fill='red')
+        draw.line((0, row1, im_width, row1), fill='black')
+        draw.line((0, row1+row_height, im_width, row1+row_height), fill='black')
+        draw.line((0, row2, im_width, row2), fill='black')
+        draw.line((0, row2+row_height, im_width, row2+row_height), fill='black')
+        draw.line((0, row3, im_width, row3), fill='black')
+        draw.line((0, row3+row_height, im_width, row3+row_height), fill='black')
         ############################################################################
 
-        # Positions for current weather details
-        weather_icon_pos = (col1, 0)
-        temperature_icon_pos = (col2, row1)
-        temperature_pos = (col2 + icon_small, row1)
-        humidity_icon_pos = (col2, row2)
-        humidity_pos = (col2 + icon_small, row2)
-        windspeed_icon_pos = (col2, row3)
-        windspeed_pos = (col2 + icon_small, row3)
+        # Positions for dog tracking
+        label_pos = (col1, 0)
+        dog_name_pos = (col1, row1)
+        dog_image_pos = (col1, row2)
 
-        # Positions for sunrise, sunset, moonphase
-        moonphase_pos = (col3, row1)
-        sunrise_icon_pos = (col3, row2)
-        sunrise_time_pos = (col3 + icon_small, row2)
-        sunset_icon_pos = (col3, row3)
-        sunset_time_pos = (col3 + icon_small, row3)
+        meal_label_pos = (col2, row1)
+        meal_time_pos = (col2, row2)
 
-        # Positions for forecast 1
-        stamp_fc1 = (col4, row1)
-        icon_fc1 = (col4, row1 + row_height)
-        temp_fc1 = (col4, row3)
+        walk_label_pos = (col3, row1)
+        walk_time_pos = (col3, row2)
+
+        greenie_label_pos = (col3, row1)
+        greenie_time_pos = (col3, row2)
 
         # Get current time
         now = arrow.utcnow()
@@ -228,12 +221,64 @@ class DogTracker(inkycal_module):
 
         write(
             im_black,
-            weather_icon_pos,
-            (col_width - icon_small, row_height),
+            label_pos,
+            (col_width, row_height),
             "Daily Activity",
             font=self.font,
         )
 
+        write(
+            im_black,
+            dog_name_pos,
+            (col_width, row_height),
+            self.dog_name,
+            font=self.font,
+        )
+
+        write(
+            im_black,
+            meal_label_pos,
+            (col_width, row_height),
+            "Meals",
+            font=self.font,
+        )
+
+        # # Add the forecast data to the correct places
+        meal_times = todays_activities.get("Meals", [])
+        if len(meal_times) > 0:
+            for pos in range(1, len(meal_times) + 1):
+                write(
+                    im_black,
+                    meal_time_pos,
+                    (col_width, row_height),
+                    "",
+                    font=self.font,
+                )
+                write(
+                    im_black,
+                    eval(f"temp_fc{pos}"),
+                    (col_width, row_height),
+                    "temp",
+                    font=self.font,
+                )
+
+        write(
+            im_black,
+            walk_label_pos,
+            (col_width, row_height),
+            "Walks",
+            font=self.font,
+        )
+
+
+
+        write(
+            im_black,
+            greenie_label_pos,
+            (col_width, row_height),
+            "Greenie",
+            font=self.font,
+        )
         # # Add the forecast data to the correct places
         # for pos in range(1, len(fc_data) + 1):
         #     stamp = fc_data[f"fc{pos}"]["stamp"]
