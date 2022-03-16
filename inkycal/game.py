@@ -12,7 +12,7 @@ from pygame.locals import (
 
 import inkycal.modules
 from inkycal.custom import get_system_tz
-from main import Inkycal
+from inkycal.main import Inkycal
 
 filename = os.path.basename(__file__).split(".py")[0]
 logger = logging.getLogger(filename)
