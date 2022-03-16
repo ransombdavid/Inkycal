@@ -12,7 +12,9 @@ import arrow
 from locale import getdefaultlocale as sys_locale
 import sqlite3
 from contextlib import closing
+import pathlib
 
+module_folder = pathlib.Path(__file__).parent.resolve()
 filename = os.path.basename(__file__).split(".py")[0]
 logger = logging.getLogger(filename)
 
@@ -73,7 +75,7 @@ class DogTracker(inkycal_module):
         # TODO: only for windows testing on project stored in wsl. sqlite gives database locked error otherwise
         # self.db_file_path = "C:\\development\\dogtracker.db"
         self.dog_image_location = os.path.join(
-            os.path.join(top_level, "images"), "pug_dog.png"
+            os.path.join(module_folder, "images"), "pug_dog.png"
         )
         # give an OK message
         print(f"{filename} loaded")
