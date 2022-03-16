@@ -78,11 +78,11 @@ class DogTracker(inkycal_module):
             os.path.join(module_folder, "images"), "pug_dog.png"
         )
         # give an OK message
-        print(f"{filename} loaded")
+        logger.info(f"{filename} loaded")
 
     def init_db(self):
         if not os.path.isfile(self.db_file_path):
-            print(f"Creating new dogtracker db {self.db_file_path}")
+            logger.info(f"Creating new dogtracker db {self.db_file_path}")
             with sqlite3.connect(self.db_file_path, timeout=10) as connection:
                 cursor = connection.cursor()
                 # Create table

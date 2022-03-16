@@ -1,5 +1,6 @@
 import logging
 import os
+from logging.handlers import RotatingFileHandler
 
 import arrow
 import pygame
@@ -11,8 +12,36 @@ from pygame.locals import (
 )
 
 import inkycal.modules
-from inkycal.custom import get_system_tz
+from inkycal.custom import get_system_tz, top_level
 from inkycal.main import Inkycal
+
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.ERROR)
+
+on_rtd = os.environ.get("READTHEDOCS") == "True"
+if on_rtd:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s | %(name)s |  %(levelname)s: %(message)s",
+        datefmt="%d-%m-%Y %H:%M:%S",
+        handlers=[stream_handler],
+    )
+
+else:
+    # Save all logs to a file, which contains more detailed output
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s | %(name)s |  %(levelname)s: %(message)s",
+        datefmt="%d-%m-%Y %H:%M:%S",
+        handlers=[
+            stream_handler,  # add stream handler from above
+            RotatingFileHandler(  # log to a file too
+                f"{top_level}/logs/inkycal.log",  # file to log
+                maxBytes=2097152,  # 2MB max filesize
+                backupCount=5,  # create max 5 log files
+            ),
+        ],
+    )
 
 filename = os.path.basename(__file__).split(".py")[0]
 logger = logging.getLogger(filename)
@@ -27,7 +56,7 @@ class InkyCalGame:
         )
         self.dog_tracker_module_index = -1
         for ix, module in enumerate(self.inky.modules):
-            print(f"Module {ix}: {module.name}")
+            logger.info(f"Module {ix}: {module.name}")
             if type(module) is inkycal.modules.DogTracker:
                 self.dog_tracker_module_index = ix
                 break
@@ -45,7 +74,7 @@ class InkyCalGame:
         while running:
             loop_start = arrow.now(tz=get_system_tz())
             if not time_to_next_refresh or time_to_next_refresh < loop_start:
-                print(
+                logger.info(
                     "Haven't refreshed yet"
                     if not time_to_next_refresh
                     else "Time to refresh now"
@@ -60,31 +89,31 @@ class InkyCalGame:
                 keys = pygame.key.get_pressed()
 
                 if keys[pygame.K_3] and keys[pygame.K_4]:
-                    print("3 and 4 pressed")
+                    logger.info("3 and 4 pressed")
                     key_pressed = True
                 elif keys[pygame.K_1]:
-                    print("1 pressed")
+                    logger.info("1 pressed")
                     key_pressed = True
                     refresh_screen = True
                     if self.dog_tracker_module_index > -1:
-                        print("Adding feeding")
+                        logger.info("Adding feeding")
                         self.inky.modules[self.dog_tracker_module_index].add_feeding()
                 elif keys[pygame.K_2]:
-                    print("2 pressed")
+                    logger.info("2 pressed")
                     key_pressed = True
                     refresh_screen = True
                     if self.dog_tracker_module_index > -1:
-                        print("Adding walk")
+                        logger.info("Adding walk")
                         self.inky.modules[self.dog_tracker_module_index].add_walk()
                 elif keys[pygame.K_3]:
-                    print("3 pressed")
+                    logger.info("3 pressed")
                     key_pressed = True
                     refresh_screen = True
                     if self.dog_tracker_module_index > -1:
-                        print("Adding greenie")
+                        logger.info("Adding greenie")
                         self.inky.modules[self.dog_tracker_module_index].add_greenie()
                 elif keys[pygame.K_4]:
-                    print("4 pressed")
+                    logger.info("4 pressed")
                     key_pressed = True
 
                 if key_pressed:
@@ -104,13 +133,13 @@ class InkyCalGame:
                     running = False
 
             if refresh_screen:
-                print("Refreshing the screen")
+                logger.info("Refreshing the screen")
                 self.inky.run_once()
                 seconds_before_next_update = self.inky.countdown()
                 time_to_next_refresh = loop_start.shift(
                     seconds=seconds_before_next_update
                 )
-                print(f"Time to next refresh: {time_to_next_refresh.format()}")
+                logger.info(f"Time to next refresh: {time_to_next_refresh.format()}")
                 refresh_screen = False
 
             pygame.display.flip()
