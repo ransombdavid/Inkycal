@@ -142,7 +142,9 @@ class InkyCalGame:
                 logger.info(f"Time to next refresh: {time_to_next_refresh.format()}")
                 refresh_screen = False
 
-            pygame.display.flip()
+            # keep debug screen updated
+            if self.inky.settings["model"] == "pygame_display":
+                pygame.display.flip()
 
 
 if __name__ == "main":
