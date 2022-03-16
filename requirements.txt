@@ -12,3 +12,4 @@ yfinance>=0.1.62                # yahoo stocks
 matplotlib==3.4.2               # plotting 
 pygame
 black
+pre-commit

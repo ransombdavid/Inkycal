@@ -10,15 +10,25 @@ from pygame.locals import (
     QUIT,
 )
 
+import inkycal.modules
 from inkycal.custom import get_system_tz
 from main import Inkycal
 
-filename = os.path.basename(__file__).split('.py')[0]
+filename = os.path.basename(__file__).split(".py")[0]
 logger = logging.getLogger(filename)
 
 # Initialize pygame
 pygame.init()
-inky = Inkycal(settings_path="C:\\development\\settings.json", render=True, optimize=False)
+inky = Inkycal(
+    settings_path="C:\\development\\settings.json", render=True, optimize=False
+)
+dog_tracker_module_index = -1
+for ix, module in enumerate(inky.modules):
+    print(f"Module {ix}: {module.name}")
+    if type(module) is inkycal.modules.DogTracker:
+        dog_tracker_module_index = ix
+        break
+
 # inky.test()
 # Variable to keep the main loop running
 running = True
@@ -32,7 +42,11 @@ time_to_next_refresh = None
 while running:
     loop_start = arrow.now(tz=get_system_tz())
     if not time_to_next_refresh or time_to_next_refresh < loop_start:
-        print("Haven't refreshed yet" if not time_to_next_refresh else "Time to refresh now")
+        print(
+            "Haven't refreshed yet"
+            if not time_to_next_refresh
+            else "Time to refresh now"
+        )
         refresh_screen = True
         time_to_next_refresh = loop_start
 
@@ -49,12 +63,23 @@ while running:
             print("1 pressed")
             key_pressed = True
             refresh_screen = True
+            if dog_tracker_module_index > -1:
+                print("Adding feeding")
+                inky.modules[dog_tracker_module_index].add_feeding()
         elif keys[pygame.K_2]:
             print("2 pressed")
             key_pressed = True
+            refresh_screen = True
+            if dog_tracker_module_index > -1:
+                print("Adding walk")
+                inky.modules[dog_tracker_module_index].add_walk()
         elif keys[pygame.K_3]:
             print("3 pressed")
             key_pressed = True
+            refresh_screen = True
+            if dog_tracker_module_index > -1:
+                print("Adding greenie")
+                inky.modules[dog_tracker_module_index].add_greenie()
         elif keys[pygame.K_4]:
             print("4 pressed")
             key_pressed = True
