@@ -27,7 +27,7 @@ def init_db(db_file_path):
             cursor = connection.cursor()
             # Create table
             cursor.execute(
-                "CREATE TABLE inkycal (activity_date text, activity_time text, activity_name text)"
+                "CREATE TABLE inkycal (activity_name text, activity_state text, activity_time text)"
             )
             cursor.execute(
                 "CREATE UNIQUE INDEX idx_inkycal_name ON inkycal (activity_name);"
@@ -49,7 +49,7 @@ def _add_activity_row(db_file_path, activity_string, activity_state):
                 f"""INSERT OR REPLACE INTO inkycal (activity_name, activity_state, activity_time) 
                VALUES ('{activity_string}',
                        '{activity_state}',
-                       '{activity_timestamp.format(TIMESTAMP_FORMAT)})"""
+                       '{activity_timestamp.format(TIMESTAMP_FORMAT)}')"""
             )
             # Save (commit) the changes
             connection.commit()
@@ -87,7 +87,7 @@ def add_refresh(db_file_path, refresh_time):
                 f"""INSERT OR REPLACE INTO inkycal (activity_name, activity_state, activity_time) 
                VALUES ('{REFRESH}',
                        '',
-                       '{refresh_time.format(TIMESTAMP_FORMAT)})"""
+                       '{refresh_time.format(TIMESTAMP_FORMAT)}')"""
             )
             # Save (commit) the changes
             connection.commit()
@@ -105,9 +105,15 @@ def should_inkycal_refresh(db_file_path):
                     WHERE activity_name = '{REFRESH}'"""
             )
             results = cursor.fetchall()
-            # if there isn't a refresh row or the timestamp is in the past, return True
+            # if the timestamp is in the past, return True
             if results and results[0] and results[0][0]:
-                results_time = arrow.get(results[0][0], TIMESTAMP_FORMAT)
+                results_time = arrow.get(
+                    results[0][0], TIMESTAMP_FORMAT, tzinfo=timezone
+                )
+                # print("Found refresh time: " + results_time.format())
                 if results_time < now_time:
+                    print(
+                        f"refresh time is in the past {results_time.format()} < {now_time.format()}"
+                    )
                     return True
     return False

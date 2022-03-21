@@ -17,6 +17,6 @@ import inkycal.modules.inkycal_dogtracker
 
 # Main file
 from inkycal.main import Inkycal
-from inkycal.game import InkyCalGame
+from inkycal.game import InkyCalWrapper
 
 # import inkycal.modules.inkycal_stocks

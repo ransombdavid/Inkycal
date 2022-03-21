@@ -151,20 +151,12 @@ class Inkycal:
         self._module_number = 1
         self.modules = list()
         modules_module = importlib.import_module("inkycal.modules")
-        print(dir(modules_module))
+
         for module in settings["modules"]:
             module_name = module["name"]
             try:
-                print(f"Attempting to import {module_name}")
                 module_class = getattr(modules_module, module_name)
                 self.modules.append(module_class(module))
-                print(f"Got past appending module {module_name}")
-                # loader = f'from inkycal.modules import {module_name}'
-                # # print(loader)
-                # exec(loader)
-                # setup = f'self.modules.append({module_name}({module}))'
-                # # print(setup)
-                # exec(setup)
                 logger.info(
                     (
                         "name : {name} size : {width}x{height} px".format(

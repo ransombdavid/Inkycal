@@ -1,5 +1,6 @@
 import logging
 import os
+import traceback
 from logging.handlers import RotatingFileHandler
 from time import sleep
 
@@ -76,6 +77,7 @@ class InkyCalWrapper:
         # Variable to keep the main loop running
         running = True
         start_inkycal(default_inkycal_db_path())
+        add_refresh(default_inkycal_db_path(), arrow.now(get_system_tz()))
 
         def handle_keypress(key):
             hotkey_pressed = False
@@ -99,7 +101,10 @@ class InkyCalWrapper:
         # Main loop
         while running:
             loop_start = arrow.now(tz=get_system_tz())
-            running = should_inkycal_stop(default_inkycal_db_path())
+            running = not should_inkycal_stop(default_inkycal_db_path())
+            if not running:
+                logger.info("Found stop state in db")
+                print("Found stop state in db")
             refresh_screen = should_inkycal_refresh(default_inkycal_db_path())
 
             if refresh_screen:
@@ -116,8 +121,11 @@ class InkyCalWrapper:
 
 
 if __name__ == "main":
-    print("Running InkyCalGame in standalone mode")
-    inky_game = InkyCalWrapper(
-        "C:\\development\\settings.json", render=True, optimize=False
-    )
-    inky_game.run()
+    print("Running InkyCalWrapper in standalone mode")
+    try:
+        inky_game = InkyCalWrapper(
+            "C:\\development\\settings.json", render=True, optimize=False
+        )
+        inky_game.run()
+    except:
+        print(traceback.format_exc())

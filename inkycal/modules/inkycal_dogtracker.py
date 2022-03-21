@@ -9,7 +9,7 @@ from inkycal.modules.modules_utilities.dogtracker_utils import (
     FEEDING,
     WALK,
     GREENIE,
-    TREAT
+    TREAT,
 )
 from inkycal.modules.template import inkycal_module
 from inkycal.custom import *
@@ -63,8 +63,8 @@ class DogTracker(inkycal_module):
                 raise Exception(f"config is missing {param}")
 
         # optional parameters
-        self.round_temperature = config.get("greenie", False)
-        self.round_windspeed = config.get("treat", False)
+        self.track_greenies = config.get("greenie", False)
+        self.track_treats = config.get("treat", False)
         self.dog_name = config.get("dog_name", "Dog")
 
         # additional configuration
