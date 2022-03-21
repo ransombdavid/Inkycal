@@ -13,3 +13,4 @@ matplotlib==3.4.2               # plotting
 pygame
 black
 pre-commit
+keyboard

@@ -7,9 +7,11 @@ from contextlib import closing
 from inkycal.custom import get_system_tz, top_level
 
 RUNNING = "RUNNING"
-WALK = "Walk"
-GREENIE = "Greenie"
-TREAT = "Treat"
+REFRESH = "REFRESH"
+STOP = "STOP"
+START = "START"
+
+TIMESTAMP_FORMAT = "YYYY-MM-DD[T]HH:mm:ss"
 
 
 def default_inkycal_db_path():
@@ -27,35 +29,85 @@ def init_db(db_file_path):
             cursor.execute(
                 "CREATE TABLE inkycal (activity_date text, activity_time text, activity_name text)"
             )
-            cursor.execute("CREATE UNIQUE INDEX idx_inkycal_name ON inkycal (activity_name);")
+            cursor.execute(
+                "CREATE UNIQUE INDEX idx_inkycal_name ON inkycal (activity_name);"
+            )
             # Save (commit) the changes
             connection.commit()
             cursor.close()
 
 
-def _add_activity_row(db_file_path, activity_string, activity_timestamp):
+def _add_activity_row(db_file_path, activity_string, activity_state):
     init_db(db_file_path)
+
+    timezone = get_system_tz()
+    activity_timestamp = arrow.now(timezone)
     with closing(sqlite3.connect(db_file_path, timeout=10)) as connection:
         with closing(connection.cursor()) as cursor:
             # Create table
             cursor.execute(
-                f"""INSERT OR REPLACE INTO inkycal (activity_date, activity_time, activity_name) 
-               VALUES ('{activity_timestamp.format("YYYY-MM-DD") if activity_timestamp else 'null'}', 
-                       '{activity_timestamp.format("HH:mm:ss") if activity_timestamp else 'null'}', 
-                       '{activity_string}')"""
+                f"""INSERT OR REPLACE INTO inkycal (activity_name, activity_state, activity_time) 
+               VALUES ('{activity_string}',
+                       '{activity_state}',
+                       '{activity_timestamp.format(TIMESTAMP_FORMAT)})"""
             )
             # Save (commit) the changes
             connection.commit()
 
 
 def stop_inkycal(db_file_path):
-    _add_activity_row(db_file_path, RUNNING, None)
+    _add_activity_row(db_file_path, RUNNING, STOP)
 
 
 def start_inkycal(db_file_path):
-    timezone = get_system_tz()
-    activity_timestamp = arrow.now(timezone)
-    _add_activity_row(db_file_path, RUNNING, activity_timestamp)
+    _add_activity_row(db_file_path, RUNNING, START)
 
-def add_refresh(db_file_path):
-    
+
+def should_inkycal_stop(db_file_path):
+    init_db(db_file_path)
+    with closing(sqlite3.connect(db_file_path, timeout=10)) as connection:
+        with closing(connection.cursor()) as cursor:
+            cursor.execute(
+                f"""SELECT activity_state FROM inkycal 
+                    WHERE activity_name = '{RUNNING}'"""
+            )
+            results = cursor.fetchall()
+            if results and results[0] and results[0][0] == START:
+                return False
+    return True
+
+
+def add_refresh(db_file_path, refresh_time):
+    init_db(db_file_path)
+
+    with closing(sqlite3.connect(db_file_path, timeout=10)) as connection:
+        with closing(connection.cursor()) as cursor:
+            # Create table
+            cursor.execute(
+                f"""INSERT OR REPLACE INTO inkycal (activity_name, activity_state, activity_time) 
+               VALUES ('{REFRESH}',
+                       '',
+                       '{refresh_time.format(TIMESTAMP_FORMAT)})"""
+            )
+            # Save (commit) the changes
+            connection.commit()
+
+
+def should_inkycal_refresh(db_file_path):
+    init_db(db_file_path)
+
+    timezone = get_system_tz()
+    now_time = arrow.now(timezone)
+    with closing(sqlite3.connect(db_file_path, timeout=10)) as connection:
+        with closing(connection.cursor()) as cursor:
+            cursor.execute(
+                f"""SELECT activity_time FROM inkycal 
+                    WHERE activity_name = '{REFRESH}'"""
+            )
+            results = cursor.fetchall()
+            # if there isn't a refresh row or the timestamp is in the past, return True
+            if results and results[0] and results[0][0]:
+                results_time = arrow.get(results[0][0], TIMESTAMP_FORMAT)
+                if results_time < now_time:
+                    return True
+    return False

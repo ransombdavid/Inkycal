@@ -4,18 +4,27 @@ from logging.handlers import RotatingFileHandler
 from time import sleep
 
 import arrow
-import pygame
-
-from pygame.locals import (
-    K_ESCAPE,
-    KEYDOWN,
-    QUIT,
-)
+import keyboard
 
 import inkycal.modules
-from inkycal.modules.modules_utilities.dogtracker_utils import add_feeding, add_walk, add_greenie, add_treat, default_dogtracker_db_path
+from inkycal.modules.modules_utilities.dogtracker_utils import (
+    add_feeding,
+    add_walk,
+    add_greenie,
+    add_treat,
+    default_dogtracker_db_path,
+)
 from inkycal.custom import get_system_tz, top_level
+from inkycal.custom.sqlite_utils import (
+    start_inkycal,
+    stop_inkycal,
+    should_inkycal_stop,
+    should_inkycal_refresh,
+    add_refresh,
+    default_inkycal_db_path,
+)
 from inkycal.main import Inkycal
+
 
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.ERROR)
@@ -49,19 +58,6 @@ filename = os.path.basename(__file__).split(".py")[0]
 logger = logging.getLogger(filename)
 
 
-def handle_keypress(key):
-    if key.name == "esc":
-        raise Exception("Exit")
-    elif key.name == "1":
-        add_feeding(default_dogtracker_db_path())
-    elif key.name == "2":
-        add_walk(default_dogtracker_db_path())
-    elif key.name == "3":
-        add_greenie(default_dogtracker_db_path())
-
-    print(key.name)
-
-
 class InkyCalWrapper:
     def __init__(self, settings_path="/boot/settings.json", render=True, optimize=True):
         self.inky = Inkycal(
@@ -79,61 +75,32 @@ class InkyCalWrapper:
     def run(self):
         # Variable to keep the main loop running
         running = True
-        next_available_key_action = None
-        refresh_screen = False
+        start_inkycal(default_inkycal_db_path())
 
-        # Get the time of initial run
-        runtime = arrow.now()
-        time_to_next_refresh = None
+        def handle_keypress(key):
+            hotkey_pressed = False
+            if key.name == "esc":
+                stop_inkycal(default_inkycal_db_path())
+            elif key.name == "1":
+                add_feeding(default_dogtracker_db_path())
+                hotkey_pressed = True
+            elif key.name == "2":
+                add_walk(default_dogtracker_db_path())
+                hotkey_pressed = True
+            elif key.name == "3":
+                add_greenie(default_dogtracker_db_path())
+                hotkey_pressed = True
+
+            if hotkey_pressed:
+                add_refresh(default_inkycal_db_path(), arrow.now(get_system_tz()))
+
+        keyboard.on_press(handle_keypress)
+
         # Main loop
         while running:
             loop_start = arrow.now(tz=get_system_tz())
-            if not time_to_next_refresh or time_to_next_refresh < loop_start:
-                logger.info(
-                    "Haven't refreshed yet"
-                    if not time_to_next_refresh
-                    else "Time to refresh now"
-                )
-                refresh_screen = True
-                time_to_next_refresh = loop_start
-
-            # make sure to give a little wiggle room so you don't
-            # kick off the routine multiple times with same keypress
-            if not next_available_key_action or next_available_key_action <= loop_start:
-                key_pressed = False
-                keys = pygame.key.get_pressed()
-
-                if keys[pygame.K_3] and keys[pygame.K_4]:
-                    logger.info("3 and 4 pressed")
-                    key_pressed = True
-                elif keys[pygame.K_1]:
-                    logger.info("1 pressed")
-                    key_pressed = True
-                    refresh_screen = True
-                    if self.dog_tracker_module_index > -1:
-                        logger.info("Adding feeding")
-                elif keys[pygame.K_2]:
-                    logger.info("2 pressed")
-                    key_pressed = True
-                    refresh_screen = True
-                    if self.dog_tracker_module_index > -1:
-                        logger.info("Adding walk")
-                        add_walk(self.dog_tracker_db)
-                elif keys[pygame.K_3]:
-                    logger.info("3 pressed")
-                    key_pressed = True
-                    refresh_screen = True
-                    if self.dog_tracker_module_index > -1:
-                        logger.info("Adding greenie")
-                        add_greenie(self.dog_tracker_db)
-                elif keys[pygame.K_4]:
-                    logger.info("4 pressed")
-                    key_pressed = True
-
-                if key_pressed:
-                    next_available_key_action = arrow.now(tz=get_system_tz()).shift(
-                        seconds=+2
-                    )
+            running = should_inkycal_stop(default_inkycal_db_path())
+            refresh_screen = should_inkycal_refresh(default_inkycal_db_path())
 
             if refresh_screen:
                 logger.info("Refreshing the screen")
@@ -142,8 +109,8 @@ class InkyCalWrapper:
                 time_to_next_refresh = loop_start.shift(
                     seconds=seconds_before_next_update
                 )
+                add_refresh(default_inkycal_db_path(), time_to_next_refresh)
                 logger.info(f"Time to next refresh: {time_to_next_refresh.format()}")
-                refresh_screen = False
 
             sleep(2)
 
