@@ -3,25 +3,23 @@
 """
 Dog tracking module for Inky-Calendar software.
 """
-
+from inkycal.modules.modules_utilities.dogtracker_utils import (
+    default_dogtracker_db_path,
+    get_all_todays_activities,
+    FEEDING,
+    WALK,
+    GREENIE,
+    TREAT
+)
 from inkycal.modules.template import inkycal_module
 from inkycal.custom import *
 
-import math, decimal
 import arrow
-from locale import getdefaultlocale as sys_locale
-import sqlite3
-from contextlib import closing
 import pathlib
 
 module_folder = pathlib.Path(__file__).parent.resolve()
 filename = os.path.basename(__file__).split(".py")[0]
 logger = logging.getLogger(filename)
-
-FEEDING = "Feeding"
-WALK = "Walk"
-GREENIE = "Greenie"
-TREAT = "Treat"
 
 
 def _format_time(time_string):
@@ -61,7 +59,7 @@ class DogTracker(inkycal_module):
 
         # Check if all required parameters are present
         for param in self.requires:
-            if not param in config:
+            if param not in config:
                 raise Exception(f"config is missing {param}")
 
         # optional parameters
@@ -70,77 +68,21 @@ class DogTracker(inkycal_module):
         self.dog_name = config.get("dog_name", "Dog")
 
         # additional configuration
+        self._db_file_path = None
         self.timezone = get_system_tz()
-        self.db_file_path = os.path.join(os.path.join(top_level, "db"), "dogtracker.db")
-        # TODO: only for windows testing on project stored in wsl. sqlite gives database locked error otherwise
-        # self.db_file_path = "C:\\development\\dogtracker.db"
         self.dog_image_location = os.path.join(
             os.path.join(module_folder, "images"), "pug_dog.png"
         )
         # give an OK message
         logger.info(f"{filename} loaded")
 
-    def init_db(self):
-        if not os.path.isfile(self.db_file_path):
-            logger.info(f"Creating new dogtracker db {self.db_file_path}")
-            with sqlite3.connect(self.db_file_path, timeout=10) as connection:
-                cursor = connection.cursor()
-                # Create table
-                cursor.execute(
-                    "CREATE TABLE dogtracking (activity_date text, activity_time text, activity_name text)"
-                )
-                # Save (commit) the changes
-                connection.commit()
-                cursor.close()
+    @property
+    def db_file_path(self):
+        if not self._db_file_path:
+            self._db_file_path = default_dogtracker_db_path()
+        return self._db_file_path
 
-    def _add_activity_row(self, activity_string):
-        with sqlite3.connect(self.db_file_path, timeout=10) as connection:
-            with closing(connection.cursor()) as cursor:
-                activity_timestamp = arrow.now(self.timezone)
-                # Create table
-                cursor.execute(
-                    f"""INSERT INTO dogtracking (activity_date, activity_time, activity_name) 
-                   VALUES ('{activity_timestamp.format("YYYY-MM-DD")}', 
-                           '{activity_timestamp.format("HH:mm:ss")}', 
-                           '{activity_string}')"""
-                )
-                # Save (commit) the changes
-                connection.commit()
-
-    def add_feeding(self):
-        self._add_activity_row(FEEDING)
-
-    def add_walk(self):
-        self._add_activity_row(WALK)
-
-    def add_treat(self):
-        self._add_activity_row(TREAT)
-
-    def add_greenie(self):
-        self._add_activity_row(GREENIE)
-
-    def get_all_todays_activities(self):
-        activities = dict()
-        todays_date = arrow.now(self.timezone).format("YYYY-MM-DD")
-        self.init_db()
-        connection = sqlite3.connect(self.db_file_path, timeout=10)
-        cursor = connection.cursor()
-        cursor.execute(
-            f"select activity_time, activity_name from dogtracking where activity_date='{todays_date}'"
-        )
-        for row in cursor.fetchall():
-            if row[1] not in activities:
-                activities[row[1]] = list()
-            activities[row[1]].append(row[0])
-        cursor.close()
-        connection.close()
-
-        # sort the activities chronologically
-        for activity in activities:
-            activities[activity].sort()
-        return activities
-
-    def print_activity_times(
+    def _print_activity_times(
         self, base_image, activity_times, starting_position, box_size, line_height
     ):
         if len(activity_times) > 0:
@@ -238,7 +180,7 @@ class DogTracker(inkycal_module):
 
         logger.debug("getting daily activities")
 
-        todays_activities = self.get_all_todays_activities()
+        todays_activities = get_all_todays_activities(self.db_file_path)
 
         for key, val in todays_activities.items():
             logger.debug((key, val))
@@ -274,7 +216,7 @@ class DogTracker(inkycal_module):
         )
 
         meal_times = todays_activities.get(FEEDING, [])
-        self.print_activity_times(
+        self._print_activity_times(
             im_black,
             activity_times=meal_times,
             starting_position=meal_time_pos,
@@ -290,7 +232,7 @@ class DogTracker(inkycal_module):
             font=self.font,
         )
         walk_times = todays_activities.get(WALK, [])
-        self.print_activity_times(
+        self._print_activity_times(
             im_black,
             activity_times=walk_times,
             starting_position=walk_time_pos,
@@ -307,7 +249,7 @@ class DogTracker(inkycal_module):
         )
 
         greenie_times = todays_activities.get(GREENIE, [])
-        self.print_activity_times(
+        self._print_activity_times(
             im_black,
             activity_times=greenie_times,
             starting_position=greenie_time_pos,

@@ -1,6 +1,7 @@
 import logging
 import os
 from logging.handlers import RotatingFileHandler
+from time import sleep
 
 import arrow
 import pygame
@@ -12,6 +13,7 @@ from pygame.locals import (
 )
 
 import inkycal.modules
+from inkycal.modules.modules_utilities.dogtracker_utils import add_feeding, add_walk, add_greenie, add_treat, default_dogtracker_db_path
 from inkycal.custom import get_system_tz, top_level
 from inkycal.main import Inkycal
 
@@ -47,17 +49,30 @@ filename = os.path.basename(__file__).split(".py")[0]
 logger = logging.getLogger(filename)
 
 
-class InkyCalGame:
+def handle_keypress(key):
+    if key.name == "esc":
+        raise Exception("Exit")
+    elif key.name == "1":
+        add_feeding(default_dogtracker_db_path())
+    elif key.name == "2":
+        add_walk(default_dogtracker_db_path())
+    elif key.name == "3":
+        add_greenie(default_dogtracker_db_path())
+
+    print(key.name)
+
+
+class InkyCalWrapper:
     def __init__(self, settings_path="/boot/settings.json", render=True, optimize=True):
-        # Initialize pygame
-        pygame.init()
         self.inky = Inkycal(
             settings_path=settings_path, render=render, optimize=optimize
         )
         self.dog_tracker_module_index = -1
+        self.dog_tracker_db = None
         for ix, module in enumerate(self.inky.modules):
             logger.info(f"Module {ix}: {module.name}")
             if type(module) is inkycal.modules.DogTracker:
+                self.dog_tracker_db = module.db_file_path
                 self.dog_tracker_module_index = ix
                 break
 
@@ -97,21 +112,20 @@ class InkyCalGame:
                     refresh_screen = True
                     if self.dog_tracker_module_index > -1:
                         logger.info("Adding feeding")
-                        self.inky.modules[self.dog_tracker_module_index].add_feeding()
                 elif keys[pygame.K_2]:
                     logger.info("2 pressed")
                     key_pressed = True
                     refresh_screen = True
                     if self.dog_tracker_module_index > -1:
                         logger.info("Adding walk")
-                        self.inky.modules[self.dog_tracker_module_index].add_walk()
+                        add_walk(self.dog_tracker_db)
                 elif keys[pygame.K_3]:
                     logger.info("3 pressed")
                     key_pressed = True
                     refresh_screen = True
                     if self.dog_tracker_module_index > -1:
                         logger.info("Adding greenie")
-                        self.inky.modules[self.dog_tracker_module_index].add_greenie()
+                        add_greenie(self.dog_tracker_db)
                 elif keys[pygame.K_4]:
                     logger.info("4 pressed")
                     key_pressed = True
@@ -120,17 +134,6 @@ class InkyCalGame:
                     next_available_key_action = arrow.now(tz=get_system_tz()).shift(
                         seconds=+2
                     )
-
-            # Look at every event in the queue
-            for event in pygame.event.get():
-                # Did the user hit a key?
-                if event.type == KEYDOWN:
-                    # Was it the Escape key? If so, stop the loop.
-                    if event.key == K_ESCAPE:
-                        running = False
-                # Did the user click the window close button? If so, stop the loop.
-                elif event.type == QUIT:
-                    running = False
 
             if refresh_screen:
                 logger.info("Refreshing the screen")
@@ -142,14 +145,12 @@ class InkyCalGame:
                 logger.info(f"Time to next refresh: {time_to_next_refresh.format()}")
                 refresh_screen = False
 
-            # keep debug screen updated
-            if self.inky.settings["model"] == "pygame_display":
-                pygame.display.flip()
+            sleep(2)
 
 
 if __name__ == "main":
     print("Running InkyCalGame in standalone mode")
-    inky_game = InkyCalGame(
+    inky_game = InkyCalWrapper(
         "C:\\development\\settings.json", render=True, optimize=False
     )
     inky_game.run()
