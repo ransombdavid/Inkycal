@@ -118,6 +118,17 @@ class DogTracker(inkycal_module):
         # |          |          |          |          |
         # |----------|----------|----------|----------|
 
+        #   column1    column2    column3    column4
+        # |----------|----------|----------|----------|
+        # | Daily Activity For {dog_name}
+        # |----------|----------|----------|----------|
+        # | Meals    | Walks    | Greenies | Treats
+        # |----------|----------|----------|----------|
+        # |          |          |          |          |
+        # |          |          |          |          |
+        # |          |          |          |          |
+        # |----------|----------|----------|----------|
+
         # Calculate size rows and columns
         col_width = im_width // 4
 

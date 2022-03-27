@@ -84,16 +84,20 @@ class InkyCalWrapper:
             if key.name == "esc":
                 stop_inkycal(default_inkycal_db_path())
             elif key.name == "1":
-                add_feeding(default_dogtracker_db_path())
-                hotkey_pressed = True
+                result = add_feeding(default_dogtracker_db_path())
+                if result > 0:
+                    hotkey_pressed = True
             elif key.name == "2":
-                add_walk(default_dogtracker_db_path())
-                hotkey_pressed = True
+                result = add_walk(default_dogtracker_db_path())
+                if result > 0:
+                    hotkey_pressed = True
             elif key.name == "3":
-                add_greenie(default_dogtracker_db_path())
-                hotkey_pressed = True
+                result = add_greenie(default_dogtracker_db_path())
+                if result > 0:
+                    hotkey_pressed = True
 
             if hotkey_pressed:
+                sleep(2)
                 add_refresh(default_inkycal_db_path(), arrow.now(get_system_tz()))
 
         keyboard.on_press(handle_keypress)
@@ -105,6 +109,8 @@ class InkyCalWrapper:
             if not running:
                 logger.info("Found stop state in db")
                 print("Found stop state in db")
+                break
+
             refresh_screen = should_inkycal_refresh(default_inkycal_db_path())
 
             if refresh_screen:

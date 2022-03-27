@@ -12,12 +12,11 @@ from PIL import Image
 import subprocess
 
 # Display resolution
-EPD_WIDTH = 800
-EPD_HEIGHT = 550
+EPD_WIDTH = 1200
+EPD_HEIGHT = 825
 
 
 class EPD:
-
     def __init__(self):
         # Create the screen object
         self.screen = pygame.display.set_mode((EPD_WIDTH, EPD_HEIGHT))
@@ -35,14 +34,16 @@ class EPD:
             image = pygame.image.load(command)
             self.screen.blit(image, (0, 0))
             # self.screen.blit(pygame.transform.rotate(self.screen, 90), (0, 0))
+            # keep debug screen updated
+            pygame.display.flip()
         except Exception as e:
             print("oops, something didn't work right :/")
 
     def getbuffer(self, image):
         """ad-hoc"""
         image = image.rotate(90, expand=True)
-        image_path = images + 'canvas.bmp'
-        image.convert('RGB').save(image_path, 'BMP')
+        image_path = images + "canvas.bmp"
+        image.convert("RGB").save(image_path, "BMP")
         # print(command)
         return image_path
 

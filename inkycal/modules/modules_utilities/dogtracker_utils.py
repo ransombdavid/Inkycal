@@ -1,3 +1,5 @@
+from time import sleep
+
 import arrow
 import logging
 import os
@@ -32,37 +34,63 @@ def init_db(db_file_path):
             cursor.close()
 
 
-def _add_activity_row(db_file_path, activity_string):
+def _add_activity_row(db_file_path, activity_string, max_activities_per_minute=1):
     init_db(db_file_path)
+    result = 0
     with closing(sqlite3.connect(db_file_path, timeout=10)) as connection:
         with closing(connection.cursor()) as cursor:
             timezone = get_system_tz()
             activity_timestamp = arrow.now(timezone)
-            # Create table
-            cursor.execute(
-                f"""INSERT INTO dogtracking (activity_date, activity_time, activity_name) 
-               VALUES ('{activity_timestamp.format("YYYY-MM-DD")}', 
-                       '{activity_timestamp.format("HH:mm:ss")}', 
-                       '{activity_string}')"""
-            )
+            activity_date = activity_timestamp.format("YYYY-MM-DD")
+            activity_time = activity_timestamp.format("HH:mm:ss")
+            should_insert_new_row = True
+
+            # limit number of activities stored in the same minute (to help with rate limiting)
+            if max_activities_per_minute > 0:
+                cursor.execute(
+                    f"""select count(*), substr(activity_time, 1, 5) from dogtracking 
+                        where activity_date='{activity_date}' 
+                          and substr(activity_time, 1, 5) = '{activity_time[:5]}'
+                    """
+                )
+                row_count = cursor.fetchone()
+                print(f"Row count {row_count}")
+                if row_count is not None and row_count[0] >= max_activities_per_minute:
+                    logging.debug(
+                        "Already found too many rows for this activity in this minute"
+                    )
+                    should_insert_new_row = False
+
+            if should_insert_new_row:
+                cursor.execute(
+                    f"""INSERT INTO dogtracking (activity_date, activity_time, activity_name) 
+                   VALUES ('{activity_date}', 
+                           '{activity_time}', 
+                           '{activity_string}')"""
+                )
+                result = 1
+            else:
+                result = -1
+
             # Save (commit) the changes
             connection.commit()
+    return result
 
 
 def add_feeding(db_file_path):
-    _add_activity_row(db_file_path, FEEDING)
+    return _add_activity_row(db_file_path, FEEDING)
 
 
 def add_walk(db_file_path):
-    _add_activity_row(db_file_path, WALK)
+    return _add_activity_row(db_file_path, WALK)
 
 
 def add_treat(db_file_path):
-    _add_activity_row(db_file_path, TREAT)
+    return _add_activity_row(db_file_path, TREAT)
 
 
 def add_greenie(db_file_path):
-    _add_activity_row(db_file_path, GREENIE)
+    return _add_activity_row(db_file_path, GREENIE)
 
 
 def get_all_todays_activities(db_file_path):
