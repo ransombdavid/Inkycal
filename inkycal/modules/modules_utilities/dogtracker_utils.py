@@ -48,13 +48,12 @@ def _add_activity_row(db_file_path, activity_string, max_activities_per_minute=1
             # limit number of activities stored in the same minute (to help with rate limiting)
             if max_activities_per_minute > 0:
                 cursor.execute(
-                    f"""select count(*), substr(activity_time, 1, 5) from dogtracking 
+                    f"""select count(*) from dogtracking 
                         where activity_date='{activity_date}' 
                           and substr(activity_time, 1, 5) = '{activity_time[:5]}'
                     """
                 )
                 row_count = cursor.fetchone()
-                print(f"Row count {row_count}")
                 if row_count is not None and row_count[0] >= max_activities_per_minute:
                     logging.debug(
                         "Already found too many rows for this activity in this minute"
