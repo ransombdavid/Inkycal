@@ -93,11 +93,9 @@ def add_refresh(db_file_path, refresh_time):
             connection.commit()
 
 
-def should_inkycal_refresh(db_file_path):
+def get_next_inkycal_refresh(db_file_path):
     init_db(db_file_path)
-
     timezone = get_system_tz()
-    now_time = arrow.now(timezone)
     with closing(sqlite3.connect(db_file_path, timeout=10)) as connection:
         with closing(connection.cursor()) as cursor:
             cursor.execute(
@@ -110,10 +108,20 @@ def should_inkycal_refresh(db_file_path):
                 results_time = arrow.get(
                     results[0][0], TIMESTAMP_FORMAT, tzinfo=timezone
                 )
-                # print("Found refresh time: " + results_time.format())
-                if results_time < now_time:
-                    print(
-                        f"refresh time is in the past {results_time.format()} < {now_time.format()}"
-                    )
-                    return True
+                return results_time
+    return None
+
+
+def should_inkycal_refresh(db_file_path):
+    init_db(db_file_path)
+
+    timezone = get_system_tz()
+    now_time = arrow.now(timezone)
+    refresh_time = get_next_inkycal_refresh(db_file_path)
+    # print("Found refresh time: " + results_time.format())
+    if refresh_time and refresh_time < now_time:
+        print(
+            f"refresh time is in the past {refresh_time.format()} < {now_time.format()}"
+        )
+        return True
     return False

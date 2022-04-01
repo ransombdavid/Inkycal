@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+<!-- Main container -->
+{% block content %}
+
+<!-- Wrap everything in a container-->
+<div class="container">
+
+<!-- heading -->
+<h3>Module Level Configuration</h3>
+
+<div class="form-group">
+    <div>Next Refresh: {{ refresh_time }}</div>
+    <button type="button" class="btn btn-primary" onclick="add_refresh();">Refresh Screen</button>
+</div>
+
+<script type="text/javascript">
+    var $j = jQuery.noConflict();
+function add_refresh() {
+
+    $j.get("/add_refresh")
+      .done(function( data ) {
+        alert( "Added refresh: " + data["refresh"] );
+      });
+}
+</script>
+
+
+</div>
+
+{% endblock %}
