@@ -60,18 +60,17 @@ logger = logging.getLogger(filename)
 
 
 class InkyCalWrapper:
-    def __init__(self, settings_path="/boot/settings.json", render=True, optimize=True):
+    def __init__(
+        self,
+        settings_path="/boot/settings.json",
+        render=True,
+        optimize=True,
+        accept_keypress=True,
+    ):
         self.inky = Inkycal(
             settings_path=settings_path, render=render, optimize=optimize
         )
-        self.dog_tracker_module_index = -1
-        self.dog_tracker_db = None
-        for ix, module in enumerate(self.inky.modules):
-            logger.info(f"Module {ix}: {module.name}")
-            if type(module) is inkycal.modules.DogTracker:
-                self.dog_tracker_db = module.db_file_path
-                self.dog_tracker_module_index = ix
-                break
+        self.accept_keypress = accept_keypress
 
     def run(self):
         # Variable to keep the main loop running
@@ -100,7 +99,8 @@ class InkyCalWrapper:
                 sleep(2)
                 add_refresh(default_inkycal_db_path(), arrow.now(get_system_tz()))
 
-        keyboard.on_press(handle_keypress)
+        if self.accept_keypress:
+            keyboard.on_press(handle_keypress)
 
         # Main loop
         while running:
@@ -130,7 +130,10 @@ if __name__ == "main":
     print("Running InkyCalWrapper in standalone mode")
     try:
         inky_game = InkyCalWrapper(
-            "C:\\development\\settings.json", render=True, optimize=False
+            "C:\\development\\settings.json",
+            render=True,
+            optimize=False,
+            accept_keypress=False,
         )
         inky_game.run()
     except:

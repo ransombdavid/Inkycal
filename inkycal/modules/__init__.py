@@ -12,3 +12,4 @@ from .inkycal_image import Inkyimage
 # from .inkycal_server import Inkyserver
 from .inkycal_dogtracker import DogTracker
 from .inkycal_counter import PillCounter
+from .inkycal_gcalendar import GoogleCalendar

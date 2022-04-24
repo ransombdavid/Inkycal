@@ -15,6 +15,7 @@ import inkycal.modules.inkycal_image
 # import inkycal.modules.inkycal_server
 import inkycal.modules.inkycal_dogtracker
 import inkycal.modules.inkycal_counter
+import inkycal.modules.inkycal_gcalendar
 
 # Main file
 from inkycal.main import Inkycal
