@@ -83,9 +83,11 @@ class DogTracker(inkycal_module):
         return self._db_file_path
 
     def _print_activity_times(
-        self, base_image, activity_times, starting_position, box_size, line_height
+        self, base_image, activity_times, starting_position, box_size
     ):
         if len(activity_times) > 0:
+            # set each line height with a little buffer
+            line_height = int(self.font.getsize(activity_times[0])[1] * 1.1)
             # TODO make sure you don't overflow the bottom of the module
             for pos in range(0, len(activity_times)):
                 write(
@@ -156,8 +158,6 @@ class DogTracker(inkycal_module):
         row2 = row1 + line_gap + row_height
         row3 = row2 + line_gap + row_height
         row4 = row3 + line_gap + row_height
-
-        line_height = 20
 
         # Draw lines on each row and border
         ############################################################################
@@ -232,7 +232,6 @@ class DogTracker(inkycal_module):
             activity_times=meal_times,
             starting_position=meal_time_pos,
             box_size=(col_width, row_height),
-            line_height=line_height,
         )
 
         write(
@@ -248,7 +247,6 @@ class DogTracker(inkycal_module):
             activity_times=walk_times,
             starting_position=walk_time_pos,
             box_size=(col_width, row_height),
-            line_height=line_height,
         )
 
         write(
@@ -265,7 +263,6 @@ class DogTracker(inkycal_module):
             activity_times=greenie_times,
             starting_position=greenie_time_pos,
             box_size=(col_width, row_height),
-            line_height=line_height,
         )
 
         # draw border around module

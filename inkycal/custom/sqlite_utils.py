@@ -10,8 +10,11 @@ RUNNING = "RUNNING"
 REFRESH = "REFRESH"
 STOP = "STOP"
 START = "START"
+SETTINGS_FILE = "SETTINGS"
 
 TIMESTAMP_FORMAT = "YYYY-MM-DD[T]HH:mm:ss"
+
+DEFAULT_SETTINGS_PATH = "/boot/settings.json"
 
 
 def default_inkycal_db_path():
@@ -125,3 +128,27 @@ def should_inkycal_refresh(db_file_path):
         )
         return True
     return False
+
+
+def get_inkycal_settings_file(db_file_path):
+    init_db(db_file_path)
+    with closing(sqlite3.connect(db_file_path, timeout=10)) as connection:
+        with closing(connection.cursor()) as cursor:
+            cursor.execute(
+                f"""SELECT activity_state FROM inkycal 
+                    WHERE activity_name = '{SETTINGS_FILE}'"""
+            )
+            results = cursor.fetchall()
+            # if the timestamp is in the past, return True
+            if results and results[0] and results[0][0]:
+                return str(results[0][0])
+
+    # if there is not a row for settings file, make a new one
+    set_inkycal_settings_file(db_file_path, DEFAULT_SETTINGS_PATH)
+    return DEFAULT_SETTINGS_PATH
+
+
+def set_inkycal_settings_file(
+    db_file_path, settings_file_location: str = "/boot/settings.json"
+):
+    _add_activity_row(db_file_path, SETTINGS_FILE, settings_file_location)

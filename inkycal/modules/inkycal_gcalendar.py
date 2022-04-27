@@ -319,9 +319,9 @@ class GoogleCalendar(inkycal_module):
                 cursor = 0
                 for event in upcoming_events:
                     if cursor < len(event_lines):
-                        name = event.summary
-                        date = event.start_time.format(self.date_format)
-                        time = event.start_time.format(self.time_format)
+                        event_name = event.summary
+                        event_date = event.start_time.format(self.date_format)
+                        event_time = event.start_time.format(self.time_format)
                         # logger.debug(f"name:{name}   date:{date} time:{time}")
 
                         if now < event.end_time:
@@ -329,50 +329,37 @@ class GoogleCalendar(inkycal_module):
                                 im_colour,
                                 event_lines[cursor],
                                 (date_width, line_height),
-                                date,
+                                event_date,
                                 font=self.font,
                                 alignment="left",
                             )
 
                             # Check if event is all day
                             if event.is_all_day:
-                                write(
-                                    im_black,
-                                    (
-                                        event_lines[cursor][0] + date_width,
-                                        event_lines[cursor][1],
-                                    ),
-                                    (event_width_l, line_height),
-                                    name,
-                                    font=self.font,
-                                    alignment="left",
-                                )
-                            else:
-                                write(
-                                    im_black,
-                                    (
-                                        event_lines[cursor][0] + date_width,
-                                        event_lines[cursor][1],
-                                    ),
-                                    (time_width, line_height),
-                                    time,
-                                    font=self.font,
-                                    alignment="left",
-                                )
+                                event_time = ""
+                            write(
+                                im_black,
+                                (
+                                    event_lines[cursor][0] + date_width,
+                                    event_lines[cursor][1],
+                                ),
+                                (time_width, line_height),
+                                event_time,
+                                font=self.font,
+                                alignment="left",
+                            )
 
-                                write(
-                                    im_black,
-                                    (
-                                        event_lines[cursor][0]
-                                        + date_width
-                                        + time_width,
-                                        event_lines[cursor][1],
-                                    ),
-                                    (event_width_s, line_height),
-                                    name,
-                                    font=self.font,
-                                    alignment="left",
-                                )
+                            write(
+                                im_black,
+                                (
+                                    event_lines[cursor][0] + date_width + time_width,
+                                    event_lines[cursor][1],
+                                ),
+                                (event_width_s, line_height),
+                                event_name,
+                                font=self.font,
+                                alignment="left",
+                            )
                             cursor += 1
             else:
                 symbol = "- "
