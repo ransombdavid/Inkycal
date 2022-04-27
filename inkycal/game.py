@@ -20,6 +20,7 @@ from inkycal.custom.sqlite_utils import (
     should_inkycal_stop,
     should_inkycal_refresh,
     add_refresh,
+    get_inkycal_settings_file,
 )
 from inkycal.main import Inkycal
 
@@ -64,10 +65,17 @@ class InkyCalWrapper:
         optimize=True,
         accept_keypress=True,
     ):
-        self.inky = Inkycal(
-            settings_path=settings_path, render=render, optimize=optimize
-        )
+        self.render = render
+        self.optimize = optimize
+        self.settings_path = settings_path
         self.accept_keypress = accept_keypress
+
+        self.inky = self.build_inkycal()
+
+    def build_inkycal(self):
+        return Inkycal(
+            settings_path=self.settings_path, render=self.render, optimize=self.optimize
+        )
 
     def run(self):
         # Variable to keep the main loop running
@@ -115,6 +123,13 @@ class InkyCalWrapper:
 
             if refresh_screen:
                 logger.info("Refreshing the screen")
+                # check for updated settings file
+                settings_file = get_inkycal_settings_file()
+                if settings_file != self.settings_path:
+                    logger.info(f"New settings file found: {settings_file}")
+                    self.settings_path = settings_file
+                    self.inky = self.build_inkycal()
+
                 self.inky.run_once()
                 seconds_before_next_update = self.inky.countdown()
                 time_to_next_refresh = loop_start.shift(
