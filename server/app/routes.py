@@ -1,3 +1,5 @@
+import os.path
+
 import arrow
 from flask import render_template, flash, redirect, request, Response, jsonify
 from app import app
@@ -35,16 +37,21 @@ def create_ssh():
 def module_config():
     from inkycal.custom.sqlite_utils import (
         get_next_inkycal_refresh,
-        default_inkycal_db_path,
+        get_inkycal_settings_file,
     )
 
-    next_refresh_time = get_next_inkycal_refresh(default_inkycal_db_path())
+    next_refresh_time = get_next_inkycal_refresh()
     if next_refresh_time:
         next_refresh_time = next_refresh_time.format()
     else:
         next_refresh_time = "Not Set"
+
+    settings_file = get_inkycal_settings_file()
     return render_template(
-        "modules.html", title="Module Specific Configs", refresh_time=next_refresh_time
+        "modules.html",
+        title="Module Specific Configs",
+        refresh_time=next_refresh_time,
+        settings_file=settings_file,
     )
 
 
@@ -55,12 +62,33 @@ def set_pull_counts():
 
 @app.route("/add_refresh")
 def add_refresh():
-    from inkycal.custom.sqlite_utils import add_refresh, default_inkycal_db_path
+    from inkycal.custom.sqlite_utils import add_refresh
 
     timezone = get_system_tz()
     now_time = arrow.now(timezone)
-    add_refresh(default_inkycal_db_path(), now_time)
+    add_refresh(now_time)
     return jsonify({"refresh": now_time.isoformat()})
+
+
+@app.route("/settings_file", methods=["POST"])
+def settings_file():
+    from inkycal.custom.sqlite_utils import set_inkycal_settings_file, add_refresh
+
+    content = request.get_json()
+    if content and "settings_file" in content:
+        settings_file_path = content["settings_file"]
+        if os.path.isfile(settings_file_path):
+            print(f"New settings file: {settings_file_path}")
+            set_inkycal_settings_file(settings_file_path)
+            timezone = get_system_tz()
+            now_time = arrow.now(timezone)
+            add_refresh(now_time)
+            return "Success"
+        else:
+            print(f"'{settings_file_path}' is not a valid file")
+    else:
+        print(f"Invalid json post data {content}")
+    return "Error"
 
 
 # Inkycal-setup

@@ -4,12 +4,11 @@
 Dog tracking module for Inky-Calendar software.
 """
 from inkycal.modules.modules_utilities.dogtracker_utils import (
-    default_dogtracker_db_path,
     get_all_todays_activities,
     FEEDING,
     WALK,
     GREENIE,
-    TREAT,
+    # TREAT,
 )
 from inkycal.modules.template import inkycal_module
 from inkycal.custom import *
@@ -75,12 +74,6 @@ class DogTracker(inkycal_module):
         )
         # give an OK message
         logger.info(f"{filename} loaded")
-
-    @property
-    def db_file_path(self):
-        if not self._db_file_path:
-            self._db_file_path = default_dogtracker_db_path()
-        return self._db_file_path
 
     def _print_activity_times(
         self, base_image, activity_times, starting_position, box_size
@@ -191,7 +184,7 @@ class DogTracker(inkycal_module):
 
         logger.debug("getting daily activities")
 
-        todays_activities = get_all_todays_activities(self.db_file_path)
+        todays_activities = get_all_todays_activities()
 
         for key, val in todays_activities.items():
             logger.debug((key, val))

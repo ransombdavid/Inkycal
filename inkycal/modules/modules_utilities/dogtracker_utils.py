@@ -13,14 +13,14 @@ WALK = "Walk"
 GREENIE = "Greenie"
 TREAT = "Treat"
 
+# TODO: only for windows testing on project stored in wsl. sqlite gives database locked error otherwise
+# DEFAULT_DOGTRACKER_DB_PATH = "C:\\development\\dogtracker.db"
+DEFAULT_DOGTRACKER_DB_PATH = os.path.join(
+    os.path.join(top_level, "db"), "dogtracker.db"
+)
 
-def default_dogtracker_db_path():
-    # TODO: only for windows testing on project stored in wsl. sqlite gives database locked error otherwise
-    # return "C:\\development\\dogtracker.db"
-    return os.path.join(os.path.join(top_level, "db"), "dogtracker.db")
 
-
-def init_db(db_file_path):
+def init_db(db_file_path: str = DEFAULT_DOGTRACKER_DB_PATH):
     if not os.path.isfile(db_file_path):
         logging.info(f"Creating new dogtracker db {db_file_path}")
         with closing(sqlite3.connect(db_file_path, timeout=10)) as connection:
@@ -34,7 +34,11 @@ def init_db(db_file_path):
             cursor.close()
 
 
-def _add_activity_row(db_file_path, activity_string, max_activities_per_minute=1):
+def _add_activity_row(
+    activity_string,
+    db_file_path: str = DEFAULT_DOGTRACKER_DB_PATH,
+    max_activities_per_minute=1,
+):
     init_db(db_file_path)
     result = 0
     with closing(sqlite3.connect(db_file_path, timeout=10)) as connection:
@@ -76,23 +80,23 @@ def _add_activity_row(db_file_path, activity_string, max_activities_per_minute=1
     return result
 
 
-def add_feeding(db_file_path):
+def add_feeding(db_file_path: str = DEFAULT_DOGTRACKER_DB_PATH):
     return _add_activity_row(db_file_path, FEEDING)
 
 
-def add_walk(db_file_path):
+def add_walk(db_file_path: str = DEFAULT_DOGTRACKER_DB_PATH):
     return _add_activity_row(db_file_path, WALK)
 
 
-def add_treat(db_file_path):
+def add_treat(db_file_path: str = DEFAULT_DOGTRACKER_DB_PATH):
     return _add_activity_row(db_file_path, TREAT)
 
 
-def add_greenie(db_file_path):
+def add_greenie(db_file_path: str = DEFAULT_DOGTRACKER_DB_PATH):
     return _add_activity_row(db_file_path, GREENIE)
 
 
-def get_all_todays_activities(db_file_path):
+def get_all_todays_activities(db_file_path: str = DEFAULT_DOGTRACKER_DB_PATH):
     activities = dict()
     timezone = get_system_tz()
     todays_date = arrow.now(timezone).format("YYYY-MM-DD")

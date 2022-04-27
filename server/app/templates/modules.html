@@ -14,15 +14,33 @@
     <button type="button" class="btn btn-primary" onclick="add_refresh();">Refresh Screen</button>
 </div>
 
+<div class="form-group">
+    <div>Settings File <input id="settings_file_txt" type="text" value="{{ settings_file }}"/></div>
+    <button type="button" class="btn btn-primary" onclick="set_settings_file();">Update Settings</button>
+</div>
+
 <script type="text/javascript">
     var $j = jQuery.noConflict();
-function add_refresh() {
+    function add_refresh() {
 
-    $j.get("/add_refresh")
-      .done(function( data ) {
-        alert( "Added refresh: " + data["refresh"] );
-      });
-}
+        $j.get("/add_refresh")
+          .done(function( data ) {
+            alert( "Added refresh: " + data["refresh"] );
+          });
+    }
+    function set_settings_file() {
+        let settings_file_txt = $j("#settings_file_txt").val();
+        let dict = {settings_file: settings_file_txt}
+        $j.ajax({
+            type: "POST",
+            url: "/settings_file",
+            data : JSON.stringify(dict),
+            contentType: "application/json",
+        }).done(function() {
+            alert( "success" );
+              location.reload(false);
+          });
+    }
 </script>
 
 

@@ -7,13 +7,11 @@ from time import sleep
 import arrow
 import keyboard
 
-import inkycal.modules
 from inkycal.modules.modules_utilities.dogtracker_utils import (
     add_feeding,
     add_walk,
     add_greenie,
-    add_treat,
-    default_dogtracker_db_path,
+    # add_treat,
 )
 from inkycal.custom import get_system_tz, top_level
 from inkycal.custom.sqlite_utils import (
@@ -22,7 +20,6 @@ from inkycal.custom.sqlite_utils import (
     should_inkycal_stop,
     should_inkycal_refresh,
     add_refresh,
-    default_inkycal_db_path,
 )
 from inkycal.main import Inkycal
 
@@ -75,29 +72,32 @@ class InkyCalWrapper:
     def run(self):
         # Variable to keep the main loop running
         running = True
-        start_inkycal(default_inkycal_db_path())
-        add_refresh(default_inkycal_db_path(), arrow.now(get_system_tz()))
+        start_inkycal()
+        add_refresh(arrow.now(get_system_tz()))
 
         def handle_keypress(key):
             hotkey_pressed = False
             if key.name == "esc":
-                stop_inkycal(default_inkycal_db_path())
+                stop_inkycal()
             elif key.name == "1":
-                result = add_feeding(default_dogtracker_db_path())
+                result = add_feeding()
                 if result > 0:
                     hotkey_pressed = True
             elif key.name == "2":
-                result = add_walk(default_dogtracker_db_path())
+                result = add_walk()
                 if result > 0:
                     hotkey_pressed = True
             elif key.name == "3":
-                result = add_greenie(default_dogtracker_db_path())
+                result = add_greenie()
                 if result > 0:
                     hotkey_pressed = True
+            elif key.name == "4":
+                # refresh screen
+                hotkey_pressed = True
 
             if hotkey_pressed:
                 sleep(2)
-                add_refresh(default_inkycal_db_path(), arrow.now(get_system_tz()))
+                add_refresh(arrow.now(get_system_tz()))
 
         if self.accept_keypress:
             keyboard.on_press(handle_keypress)
@@ -105,13 +105,13 @@ class InkyCalWrapper:
         # Main loop
         while running:
             loop_start = arrow.now(tz=get_system_tz())
-            running = not should_inkycal_stop(default_inkycal_db_path())
+            running = not should_inkycal_stop()
             if not running:
                 logger.info("Found stop state in db")
                 print("Found stop state in db")
                 break
 
-            refresh_screen = should_inkycal_refresh(default_inkycal_db_path())
+            refresh_screen = should_inkycal_refresh()
 
             if refresh_screen:
                 logger.info("Refreshing the screen")
@@ -120,7 +120,7 @@ class InkyCalWrapper:
                 time_to_next_refresh = loop_start.shift(
                     seconds=seconds_before_next_update
                 )
-                add_refresh(default_inkycal_db_path(), time_to_next_refresh)
+                add_refresh(time_to_next_refresh)
                 logger.info(f"Time to next refresh: {time_to_next_refresh.format()}")
 
             sleep(2)

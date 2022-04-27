@@ -16,14 +16,12 @@ TIMESTAMP_FORMAT = "YYYY-MM-DD[T]HH:mm:ss"
 
 DEFAULT_SETTINGS_PATH = "/boot/settings.json"
 
-
-def default_inkycal_db_path():
-    # TODO: only for windows testing on project stored in wsl. sqlite gives database locked error otherwise
-    # return "C:\\development\\inkycal.db"
-    return os.path.join(os.path.join(top_level, "db"), "inkycal.db")
+# TODO: only for windows testing on project stored in wsl. sqlite gives database locked error otherwise
+# DEFAULT_INKYCAL_DB_PATH = "C:\\development\\inkycal.db"
+DEFAULT_INKYCAL_DB_PATH = os.path.join(os.path.join(top_level, "db"), "inkycal.db")
 
 
-def init_db(db_file_path):
+def init_db(db_file_path: str = DEFAULT_INKYCAL_DB_PATH):
     if not os.path.isfile(db_file_path):
         logging.info(f"Creating new inkycal db {db_file_path}")
         with closing(sqlite3.connect(db_file_path, timeout=10)) as connection:
@@ -40,7 +38,11 @@ def init_db(db_file_path):
             cursor.close()
 
 
-def _add_activity_row(db_file_path, activity_string, activity_state):
+def _add_activity_row(
+    activity_string: str,
+    activity_state: str,
+    db_file_path: str = DEFAULT_INKYCAL_DB_PATH,
+):
     init_db(db_file_path)
 
     timezone = get_system_tz()
@@ -58,15 +60,15 @@ def _add_activity_row(db_file_path, activity_string, activity_state):
             connection.commit()
 
 
-def stop_inkycal(db_file_path):
-    _add_activity_row(db_file_path, RUNNING, STOP)
+def stop_inkycal(db_file_path: str = DEFAULT_INKYCAL_DB_PATH):
+    _add_activity_row(RUNNING, STOP, db_file_path)
 
 
-def start_inkycal(db_file_path):
-    _add_activity_row(db_file_path, RUNNING, START)
+def start_inkycal(db_file_path: str = DEFAULT_INKYCAL_DB_PATH):
+    _add_activity_row(RUNNING, START, db_file_path)
 
 
-def should_inkycal_stop(db_file_path):
+def should_inkycal_stop(db_file_path: str = DEFAULT_INKYCAL_DB_PATH):
     init_db(db_file_path)
     with closing(sqlite3.connect(db_file_path, timeout=10)) as connection:
         with closing(connection.cursor()) as cursor:
@@ -80,7 +82,7 @@ def should_inkycal_stop(db_file_path):
     return True
 
 
-def add_refresh(db_file_path, refresh_time):
+def add_refresh(refresh_time, db_file_path: str = DEFAULT_INKYCAL_DB_PATH):
     init_db(db_file_path)
 
     with closing(sqlite3.connect(db_file_path, timeout=10)) as connection:
@@ -96,7 +98,7 @@ def add_refresh(db_file_path, refresh_time):
             connection.commit()
 
 
-def get_next_inkycal_refresh(db_file_path):
+def get_next_inkycal_refresh(db_file_path: str = DEFAULT_INKYCAL_DB_PATH):
     init_db(db_file_path)
     timezone = get_system_tz()
     with closing(sqlite3.connect(db_file_path, timeout=10)) as connection:
@@ -115,7 +117,7 @@ def get_next_inkycal_refresh(db_file_path):
     return None
 
 
-def should_inkycal_refresh(db_file_path):
+def should_inkycal_refresh(db_file_path: str = DEFAULT_INKYCAL_DB_PATH):
     init_db(db_file_path)
 
     timezone = get_system_tz()
@@ -130,7 +132,7 @@ def should_inkycal_refresh(db_file_path):
     return False
 
 
-def get_inkycal_settings_file(db_file_path):
+def get_inkycal_settings_file(db_file_path: str = DEFAULT_INKYCAL_DB_PATH):
     init_db(db_file_path)
     with closing(sqlite3.connect(db_file_path, timeout=10)) as connection:
         with closing(connection.cursor()) as cursor:
@@ -149,6 +151,7 @@ def get_inkycal_settings_file(db_file_path):
 
 
 def set_inkycal_settings_file(
-    db_file_path, settings_file_location: str = "/boot/settings.json"
+    settings_file_location: str = "/boot/settings.json",
+    db_file_path: str = DEFAULT_INKYCAL_DB_PATH,
 ):
-    _add_activity_row(db_file_path, SETTINGS_FILE, settings_file_location)
+    _add_activity_row(SETTINGS_FILE, settings_file_location, db_file_path)

@@ -313,8 +313,7 @@ class GoogleCalendar(inkycal_module):
 
                 line_height = self.font.getsize("hg")[1] + line_spacing
 
-                event_width_s = events_width - date_width - time_width
-                event_width_l = events_width - date_width
+                event_width = events_width - date_width - time_width
 
                 cursor = 0
                 for event in upcoming_events:
@@ -336,7 +335,7 @@ class GoogleCalendar(inkycal_module):
 
                             # Check if event is all day
                             if event.is_all_day:
-                                event_time = ""
+                                event_time = " ALL "
                             write(
                                 im_black,
                                 (
@@ -355,7 +354,7 @@ class GoogleCalendar(inkycal_module):
                                     event_lines[cursor][0] + date_width + time_width,
                                     event_lines[cursor][1],
                                 ),
-                                (event_width_s, line_height),
+                                (event_width, line_height),
                                 event_name,
                                 font=self.font,
                                 alignment="left",
