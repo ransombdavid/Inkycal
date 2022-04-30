@@ -82,19 +82,19 @@ def _add_activity_row(
 
 
 def add_feeding(db_file_path: str = DEFAULT_DOGTRACKER_DB_PATH):
-    return _add_activity_row(db_file_path, FEEDING)
+    return _add_activity_row(FEEDING, db_file_path)
 
 
 def add_walk(db_file_path: str = DEFAULT_DOGTRACKER_DB_PATH):
-    return _add_activity_row(db_file_path, WALK)
+    return _add_activity_row(WALK, db_file_path)
 
 
 def add_treat(db_file_path: str = DEFAULT_DOGTRACKER_DB_PATH):
-    return _add_activity_row(db_file_path, TREAT)
+    return _add_activity_row(TREAT, db_file_path)
 
 
 def add_greenie(db_file_path: str = DEFAULT_DOGTRACKER_DB_PATH):
-    return _add_activity_row(db_file_path, GREENIE)
+    return _add_activity_row(GREENIE, db_file_path)
 
 
 def get_all_todays_activities(db_file_path: str = DEFAULT_DOGTRACKER_DB_PATH):
