@@ -21,6 +21,7 @@ DEFAULT_DOGTRACKER_DB_PATH = os.path.join(
 
 
 def init_db(db_file_path: str = DEFAULT_DOGTRACKER_DB_PATH):
+    logging.info(f"dogtracker_utils.init_db: {db_file_path}")
     if not os.path.isfile(db_file_path):
         logging.info(f"Creating new dogtracker db {db_file_path}")
         with closing(sqlite3.connect(db_file_path, timeout=10)) as connection:

@@ -386,8 +386,8 @@ class Inkycal:
                 self.info += f"module {number}: OK  "
             except Exception as Error:
                 errors.append(number)
-                print("error!")
-                print(traceback.format_exc())
+                logger.error("error!")
+                logger.error(traceback.format_exc())
                 self.info += f"module {number}: error!  "
                 logger.exception(f"Exception in module {number}")
 

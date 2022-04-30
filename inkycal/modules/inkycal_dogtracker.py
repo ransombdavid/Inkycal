@@ -288,4 +288,4 @@ if __name__ == "__main__":
     }
     dog_tracker = DogTracker(example_config)
     im_black, _ = dog_tracker.generate_image()
-    im_black.save(f"C:\\development\\dog_debug_black.png", "PNG")
+    im_black.save(os.path.join(os.path.expanduser("~"), "dog_debug_black.png"), "PNG")
