@@ -10,13 +10,26 @@
 <h3>Module Level Configuration</h3>
 
 <div class="form-group">
-    <div>Next Refresh: {{ refresh_time }}</div>
+    <label for="next_refresh_txt">Next Refresh:</label>
+    <input class="form-control" id="next_refresh_txt" type="text" style="width: 300px;" value="{{ refresh_time }}" disabled readonly/>
     <button type="button" class="btn btn-primary" onclick="add_refresh();">Refresh Screen</button>
 </div>
 
 <div class="form-group">
-    <div>Settings File <input id="settings_file_txt" type="text" value="{{ settings_file }}"/></div>
-    <button type="button" class="btn btn-primary" onclick="set_settings_file();">Update Settings</button>
+    <fieldset class="border p-2">
+    <legend class="w-auto">Settings File:</legend>
+            {%for i in range(0, settings_files|length)%}
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="settingsFileRadio" id="flexRadioDefault{{ i }}" value="{{ i }}" {{ 'checked="checked"' if settings_files[i] == settings_file else "" }}>
+                  <label class="form-check-label" for="flexRadioDefault{{ i }}">{{settings_files[i]}}</label>
+                </div>
+            {%endfor%}
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="settingsFileRadio" id="flexRadioDefault{{ settings_files|length }}" value="other" {{ 'checked="checked"' if is_other else "" }}>
+                  <label class="form-check-label" for="flexRadioDefault{{ settings_files|length }}">Other: <input class="form-control" id="settings_file_txt" type="text" style="width: 300px;" value="{{ settings_file }}"/></label>
+                </div>
+        <button type="button" class="btn btn-primary" onclick="set_settings_file();">Update Settings</button>
+    </fieldset>
 </div>
 
 <script type="text/javascript">
@@ -29,12 +42,27 @@
           });
     }
     function set_settings_file() {
-        let settings_file_txt = $j("#settings_file_txt").val();
-        let dict = {settings_file: settings_file_txt}
+        let selected_option = $j('input[name="settingsFileRadio"]:checked').val();
+        console.log(selected_option);
+        let post_dict = {};
+        if(Number.isInteger(selected_option)) {
+            let selector_str = 'label[for="flexRadioDefault' + selected_option + '"]';
+            let settings_file_txt = $j(selector_str).html();
+            post_dict = {settings_file: settings_file_txt};
+        }
+        else {
+            if (selected_option === "other") {
+                let settings_file_txt = $j("#settings_file_txt").val();
+                post_dict = {settings_file: settings_file_txt};
+            } else {
+                alert("Can't find new settings file!!!");
+                return false;
+            }
+        }
         $j.ajax({
             type: "POST",
             url: "/settings_file",
-            data : JSON.stringify(dict),
+            data : JSON.stringify(post_dict),
             contentType: "application/json",
         }).done(function() {
             alert( "success" );

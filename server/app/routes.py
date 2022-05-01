@@ -47,11 +47,19 @@ def module_config():
         next_refresh_time = "Not Set"
 
     settings_file = get_inkycal_settings_file()
+    settings_files = [
+        "/boot/settings.json",
+        "/boot/guest_settings.json",
+        "/boot/picture_settings.json",
+    ]
+    is_other = settings_file not in settings_files
     return render_template(
         "modules.html",
         title="Module Specific Configs",
         refresh_time=next_refresh_time,
         settings_file=settings_file,
+        settings_files=settings_files,
+        is_other=is_other,
     )
 
 

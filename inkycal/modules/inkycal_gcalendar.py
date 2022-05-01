@@ -335,7 +335,7 @@ class GoogleCalendar(inkycal_module):
 
                             # Check if event is all day
                             if event.is_all_day:
-                                event_time = " ALL "
+                                event_time = "     "
                             write(
                                 im_black,
                                 (
