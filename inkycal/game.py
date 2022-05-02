@@ -124,7 +124,7 @@ class InkyCalWrapper:
 
             if refresh_screen:
                 logger.info("Refreshing the screen")
-                self._add_refresh_icon()
+                self._show_refresh_image()
 
                 # check for updated settings file
                 settings_file = get_inkycal_settings_file()
@@ -134,6 +134,7 @@ class InkyCalWrapper:
                     self.inky = self.build_inkycal()
 
                 self.inky.run_once()
+                self._add_refresh_icon()  # cache refresh image
                 seconds_before_next_update = self.inky.countdown()
                 time_to_next_refresh = loop_start.shift(
                     seconds=seconds_before_next_update
@@ -143,8 +144,13 @@ class InkyCalWrapper:
 
             sleep(2)
 
+    def _show_refresh_image(self):
+        refresh_image = Image.open(f"{self.inky.image_folder}/refresh.png")
+        self.inky.Display.render(refresh_image)
+
     def _add_refresh_icon(self):
-        background_image = Image.open(f"{self.inky.image_folder}/canvas.png").copy()
+        background_image = self.inky._merge_bands()
+
         # add refresh icon to center
         refresh_image = Image.open(f"{self.inky.image_folder}/refresh_icon.png")
         background_size = background_image.size
@@ -157,8 +163,6 @@ class InkyCalWrapper:
         )
         background_image.paste(refresh_image, center_coord)
         background_image.save(f"{self.inky.image_folder}/refresh.png", "PNG")
-
-        self.inky.Display.render(background_image)
 
 
 if __name__ == "main":
