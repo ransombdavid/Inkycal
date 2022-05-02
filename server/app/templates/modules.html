@@ -43,10 +43,9 @@
     }
     function set_settings_file() {
         let selected_option = $j('input[name="settingsFileRadio"]:checked').val();
-        console.log(selected_option);
         let post_dict = {};
-        if(Number.isInteger(selected_option)) {
-            let selector_str = 'label[for="flexRadioDefault' + selected_option + '"]';
+        if(!isNaN(selected_option)) {
+            let selector_str = 'label[for="flexRadioDefault' + parseInt(selected_option) + '"]';
             let settings_file_txt = $j(selector_str).html();
             post_dict = {settings_file: settings_file_txt};
         }
