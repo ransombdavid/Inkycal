@@ -11,7 +11,8 @@ import inkycal.modules.inkycal_weather
 import inkycal.modules.inkycal_image
 
 # import inkycal.modules.inkycal_jokes
-# import inkycal.modules.inkycal_slideshow
+import inkycal.modules.inkycal_slideshow
+
 # import inkycal.modules.inkycal_server
 import inkycal.modules.inkycal_dogtracker
 import inkycal.modules.inkycal_counter
