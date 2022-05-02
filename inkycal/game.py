@@ -23,6 +23,7 @@ from inkycal.custom.sqlite_utils import (
     get_inkycal_settings_file,
 )
 from inkycal.main import Inkycal
+from PIL import Image
 
 
 stream_handler = logging.StreamHandler()
@@ -123,6 +124,8 @@ class InkyCalWrapper:
 
             if refresh_screen:
                 logger.info("Refreshing the screen")
+                self._add_refresh_icon()
+
                 # check for updated settings file
                 settings_file = get_inkycal_settings_file()
                 if settings_file != self.settings_path:
@@ -139,6 +142,23 @@ class InkyCalWrapper:
                 logger.info(f"Time to next refresh: {time_to_next_refresh.format()}")
 
             sleep(2)
+
+    def _add_refresh_icon(self):
+        background_image = Image.open(f"{self.inky.image_folder}/canvas.png").copy()
+        # add refresh icon to center
+        refresh_image = Image.open(f"{self.inky.image_folder}/refresh_icon.png")
+        background_size = background_image.size
+        min_side = int(min(background_size) / 2)
+        refresh_image = refresh_image.resize((min_side, min_side), Image.ANTIALIAS)
+
+        center_coord = (
+            round(background_size[0] / 2 - min_side / 2),
+            round(background_size[1] / 2 - min_side / 2),
+        )
+        background_image.paste(refresh_image, center_coord)
+        background_image.save(f"{self.inky.image_folder}/refresh.png", "PNG")
+
+        self.inky.Display.render(background_image)
 
 
 if __name__ == "main":
