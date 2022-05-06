@@ -147,6 +147,8 @@ class DogTracker(inkycal_module):
         # Calculate the y-axis position of each row
         line_gap = int((im_height - spacing_top - 3 * row_height) // 4)
 
+        label_height = int(self.font.getsize("11:11")[1] * 1.1)
+
         row1 = line_gap
         row2 = row1 + line_gap + row_height
         row3 = row2 + line_gap + row_height
@@ -171,13 +173,13 @@ class DogTracker(inkycal_module):
         dog_image_pos = (col1, row3)
 
         meal_label_pos = (col2, row1)
-        meal_time_pos = (col2, row2)
+        meal_time_pos = (col2, row1 + label_height)
 
         walk_label_pos = (col3, row1)
-        walk_time_pos = (col3, row2)
+        walk_time_pos = (col3, row1 + label_height)
 
         greenie_label_pos = (col4, row1)
-        greenie_time_pos = (col4, row2)
+        greenie_time_pos = (col4, row1 + label_height)
 
         # Get current time
         now = arrow.utcnow()
@@ -217,6 +219,7 @@ class DogTracker(inkycal_module):
             (col_width, row_height),
             "Meals",
             font=self.font,
+            underline=True,
         )
 
         meal_times = todays_activities.get(FEEDING, [])
@@ -233,6 +236,7 @@ class DogTracker(inkycal_module):
             (col_width, row_height),
             "Walks",
             font=self.font,
+            underline=True,
         )
         walk_times = todays_activities.get(WALK, [])
         self._print_activity_times(
@@ -248,6 +252,7 @@ class DogTracker(inkycal_module):
             (col_width, row_height),
             "Greenie",
             font=self.font,
+            underline=True,
         )
 
         greenie_times = todays_activities.get(GREENIE, [])
