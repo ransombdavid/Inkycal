@@ -22,6 +22,13 @@ class GoogleCalendar(inkycal_module):
 
     name = "Calendar - Show monthly calendar with events from Google Calendar"
 
+    required = {
+        "calendar_ids": {
+            "label": "Google email address, shared with a service account",
+        },
+        "credentials_file": {"label": "Service account credentials file (JSON)"},
+    }
+
     optional = {
         "week_starts_on": {
             "label": "When does your week start? (default=Monday)",
@@ -33,10 +40,6 @@ class GoogleCalendar(inkycal_module):
             "options": [True, False],
             "default": True,
         },
-        "calendar_ids": {
-            "label": "Google email address, shared with a service account",
-        },
-        "credentials_file": {"label": "Service account credentials file (JSON)"},
         "date_format": {
             "label": "Use an arrow-supported token for custom date formatting "
             + "see https://arrow.readthedocs.io/en/stable/#supported-tokens, e.g. D MMM",
@@ -47,6 +50,18 @@ class GoogleCalendar(inkycal_module):
             + "see https://arrow.readthedocs.io/en/stable/#supported-tokens, e.g. HH:mm",
             "default": "HH:mm",
         },
+        "language": {
+            "label": "Language abbreviation, i.e. 'en', 'fr', 'rs' ",
+            "default": "en",
+        },
+        "calendar_percentage": {
+            "label": "How much of the module should the calendar take up. Float between 0.0 and 1.0 ",
+            "default": "0.5",
+        },
+        "event_fontsize": {
+            "label": "Font size for the events (if 'show_events' arg is True) ",
+            "default": "18",
+        },
     }
 
     def __init__(self, config):
@@ -56,11 +71,28 @@ class GoogleCalendar(inkycal_module):
         config = config["config"]
 
         # optional parameters
-        self.weekstart = config["week_starts_on"]
-        self.show_events = config["show_events"]
-        self.date_format = config["date_format"]
-        self.time_format = config["time_format"]
-        self.language = config["language"]
+        self.weekstart = config.get(
+            "week_starts_on", GoogleCalendar.optional["week_starts_on"]["default"]
+        )
+        self.show_events = config.get(
+            "show_events", GoogleCalendar.optional["show_events"]["default"]
+        )
+        self.date_format = config.get(
+            "date_format", GoogleCalendar.optional["date_format"]["default"]
+        )
+        self.time_format = config.get(
+            "time_format", GoogleCalendar.optional["time_format"]["default"]
+        )
+        self.language = config.get(
+            "language", GoogleCalendar.optional["language"]["default"]
+        )
+        self.calendar_pct = config.get(
+            "calendar_percentage",
+            GoogleCalendar.optional["calendar_percentage"]["default"],
+        )
+        self.event_fontsize = config.get(
+            "event_fontsize", GoogleCalendar.optional["event_fontsize"]["default"]
+        )
 
         self.calendar_ids = str(config["calendar_ids"]).split(",")
         self.credentials_file = config["credentials_file"]
@@ -69,6 +101,9 @@ class GoogleCalendar(inkycal_module):
         self.timezone = get_system_tz()
         self.num_font = ImageFont.truetype(
             fonts["NotoSans-SemiCondensed"], size=self.fontsize
+        )
+        self.event_font = ImageFont.truetype(
+            fonts["NotoSansUI-Regular"], size=int(self.event_fontsize)
         )
 
         # give an OK message
@@ -102,11 +137,14 @@ class GoogleCalendar(inkycal_module):
         logger.debug(f"month_name_height: {month_name_height}")
         logger.debug(f"weekdays_height: {weekdays_height}")
 
-        calendar_width = int(im_width / 2)
-        events_width = int(im_width / 2)
+        calendar_width = int(im_width * float(self.calendar_pct))
+        events_width = im_width - calendar_width
+        # calendar_width = int(im_width / 2)
+        # events_width = int(im_width / 2)
         calendar_height = im_height - month_name_height - weekdays_height
         events_height = im_height
-        logger.debug(f"calendar-section size: {calendar_width} x {calendar_height} px")
+        logger.info(f"calendar-section size: {calendar_width} x {calendar_height} px")
+        logger.info(f"events-section size: {events_width} x {events_height} px")
 
         # Create a 7x6 grid and calculate icon sizes
         calendar_rows, calendar_cols = 6, 7
@@ -233,11 +271,11 @@ class GoogleCalendar(inkycal_module):
             # find out how many lines can fit at max in the event section
             line_spacing = 0
             max_event_lines = events_height // (
-                self.font.getsize("hg")[1] + line_spacing
+                self.event_font.getsize("hg")[1] + line_spacing
             )
 
             # generate list of coordinates for each line
-            events_offset = im_width - calendar_width + self.padding_left
+            events_offset = im_width - events_width + self.padding_left
             event_lines = [
                 (events_offset, int(events_height / max_event_lines * _))
                 for _ in range(max_event_lines)
@@ -290,7 +328,7 @@ class GoogleCalendar(inkycal_module):
                 date_width = int(
                     max(
                         [
-                            self.font.getsize(
+                            self.event_font.getsize(
                                 events.start_time.format(self.date_format)
                             )[0]
                             for events in upcoming_events
@@ -302,7 +340,7 @@ class GoogleCalendar(inkycal_module):
                 time_width = int(
                     max(
                         [
-                            self.font.getsize(
+                            self.event_font.getsize(
                                 events.start_time.format(self.time_format)
                             )[0]
                             for events in upcoming_events
@@ -311,11 +349,13 @@ class GoogleCalendar(inkycal_module):
                     * 1.1
                 )
 
-                line_height = self.font.getsize("hg")[1] + line_spacing
+                line_height = self.event_font.getsize("hg")[1] + line_spacing
 
                 event_width = events_width - date_width - time_width
 
                 cursor = 0
+                future_date_label_created = False
+                future_date_boundary = now.shift(days=21)
                 for event in upcoming_events:
                     if cursor < len(event_lines):
                         event_name = event.summary
@@ -324,13 +364,36 @@ class GoogleCalendar(inkycal_module):
                         # logger.debug(f"name:{name}   date:{date} time:{time}")
 
                         if now < event.end_time:
+                            # bold events that are today
+                            bold = (
+                                event.start_time.floor("day")
+                                < now
+                                < event.end_time.ceil("day")
+                            )
+                            if (
+                                not future_date_label_created
+                                and event.start_time > future_date_boundary
+                            ):
+                                write(
+                                    im_colour,
+                                    event_lines[cursor],
+                                    (events_width, line_height + 5),
+                                    "Future Events",
+                                    font=self.event_font,
+                                    alignment="left",
+                                    underline=True,
+                                )
+                                future_date_label_created = True
+                                cursor += 1
+
                             write(
                                 im_colour,
                                 event_lines[cursor],
                                 (date_width, line_height),
                                 event_date,
-                                font=self.font,
+                                font=self.event_font,
                                 alignment="left",
+                                bold=bold,
                             )
 
                             # Check if event is all day
@@ -344,8 +407,9 @@ class GoogleCalendar(inkycal_module):
                                 ),
                                 (time_width, line_height),
                                 event_time,
-                                font=self.font,
+                                font=self.event_font,
                                 alignment="left",
+                                bold=bold,
                             )
 
                             write(
@@ -356,20 +420,21 @@ class GoogleCalendar(inkycal_module):
                                 ),
                                 (event_width, line_height),
                                 event_name,
-                                font=self.font,
+                                font=self.event_font,
                                 alignment="left",
+                                bold=bold,
                             )
                             cursor += 1
             else:
                 symbol = "- "
-                while self.font.getsize(symbol)[0] < calendar_width * 0.9:
+                while self.event_font.getsize(symbol)[0] < calendar_width * 0.9:
                     symbol += " -"
                 write(
                     im_black,
                     event_lines[0],
-                    (calendar_width, self.font.getsize(symbol)[1]),
+                    (calendar_width, self.event_font.getsize(symbol)[1]),
                     symbol,
-                    font=self.font,
+                    font=self.event_font,
                 )
 
         # return the images ready for the display

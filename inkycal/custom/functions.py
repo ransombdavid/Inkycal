@@ -134,6 +134,7 @@ def write(image, xy, box_size, text, font=None, **kwargs):
       - fill_height: Decimal representing a percentage e.g. 0.9 # 90%. Fill a
         maximum of 90% of the size of the full height of the text-box.
       - underline: draw a line under the text
+      - bold: draw bolded version of text
     """
     allowed_kwargs = [
         "alignment",
@@ -143,6 +144,7 @@ def write(image, xy, box_size, text, font=None, **kwargs):
         "fill_width",
         "fill_height",
         "underline",
+        "bold",
     ]
 
     # Validate kwargs
@@ -158,6 +160,7 @@ def write(image, xy, box_size, text, font=None, **kwargs):
     colour = kwargs["colour"] if "colour" in kwargs else "black"
     rotation = kwargs["rotation"] if "rotation" in kwargs else None
     underline = kwargs.get("underline", False)
+    bold = kwargs.get("bold", False)
 
     x, y = xy
     box_width, box_height = box_size
@@ -197,7 +200,12 @@ def write(image, xy, box_size, text, font=None, **kwargs):
     # Draw the text in the text-box
     space = Image.new("RGBA", (box_width, box_height))
     draw = ImageDraw.Draw(space)
-    draw.text((x, y), text, fill=colour, font=font)
+    if bold:
+        draw.text(
+            (x, y), text, fill=colour, font=font, stroke_width=1, stroke_fill=colour
+        )
+    else:
+        draw.text((x, y), text, fill=colour, font=font)
     if underline:
         lx, ly = x, y + text_height
         draw.line((lx, ly, lx + text_width, ly), fill=colour)
