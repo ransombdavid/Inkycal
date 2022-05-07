@@ -286,6 +286,8 @@ class GoogleCalendar(inkycal_module):
             # timeline for filtering events within this month
             month_start = arrow.get(now.floor("month"))
             month_end = arrow.get(now.ceil("month"))
+            today_start = arrow.get(now.floor("day"))
+            today_end = arrow.get(now.ceil("day"))
 
             # Filter events for full month (even past ones) for drawing event icons
             all_events = get_events(
@@ -294,7 +296,9 @@ class GoogleCalendar(inkycal_module):
                 credentials_file=self.credentials_file,
             )
             month_events = filter_events(all_events, month_start, month_end)
-            upcoming_events = filter_events(all_events, now, now.shift(days=60))
+            upcoming_events = filter_events(
+                all_events, today_start, today_start.shift(days=60)
+            )
 
             # find out on which days of this month events are taking place
             days_with_events = [
@@ -365,11 +369,7 @@ class GoogleCalendar(inkycal_module):
 
                         if now < event.end_time:
                             # bold events that are today
-                            bold = (
-                                event.start_time.floor("day")
-                                < now
-                                < event.end_time.ceil("day")
-                            )
+                            bold = today_start < event.start_time < today_end
                             if (
                                 not future_date_label_created
                                 and event.start_time > future_date_boundary
