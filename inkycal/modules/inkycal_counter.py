@@ -30,12 +30,10 @@ class PillCounter(inkycal_module):
     name = "Pill Counter - Tracks pill counts"
 
     requires = {
-        "prescription_days": {
-            "label": "Number of days in the prescription",
-        },
         "credentials_file": {
             "label": "Location of the google api credentials json file"
         },
+        "track_d": {"label": "Track dilaudid count", "default": False},
     }
 
     optional = {}
@@ -56,6 +54,7 @@ class PillCounter(inkycal_module):
         self._db_file_path = None
         self.timezone = get_system_tz()
         self.credentials_file = config["credentials_file"]
+        self.track_d = config.get("track_d", False)
 
         # give an OK message
         logger.info(f"{filename} loaded")
@@ -121,8 +120,12 @@ class PillCounter(inkycal_module):
 
         # Positions for counts
         p_count_pos = (col1, 0)
-        d_count_pos = (col2, 0)
-        days_left_pos = (col1, row2)
+        if self.track_d:
+            d_count_pos = (col2, 0)
+            days_left_pos = (col1, row2)
+        else:
+            d_count_pos = None
+            days_left_pos = (col2, 0)
 
         # Get current time
         now = arrow.now(self.timezone)
@@ -148,30 +151,43 @@ class PillCounter(inkycal_module):
         logger.debug(todays_counts)
 
         pill_count_format = "{:.1f}"
-        # Fill label details in col 1
-        write(
-            im_black,
-            p_count_pos,
-            (col_width, row_height),
-            pill_count_format.format(todays_counts.p_count) + " P",
-            font=self.font,
-        )
+        p_text = pill_count_format.format(todays_counts.p_count) + " P"
+        d_text = pill_count_format.format(todays_counts.d_count) + " D"
+        days_text = str(todays_counts.days_left) + " days left"
 
-        write(
-            im_black,
-            d_count_pos,
-            (col_width, row_height),
-            pill_count_format.format(todays_counts.d_count) + " D",
-            font=self.font,
-        )
+        if self.track_d:
+            write(
+                im_black,
+                p_count_pos,
+                (col_width, row_height),
+                p_text,
+                font=self.font,
+            )
 
-        write(
-            im_black,
-            days_left_pos,
-            (im_width, row_height),
-            str(todays_counts.days_left) + " days left",
-            font=self.font,
-        )
+            write(
+                im_black,
+                d_count_pos,
+                (col_width, row_height),
+                d_text,
+                font=self.font,
+            )
+
+            write(
+                im_black,
+                days_left_pos,
+                (im_width, row_height),
+                days_text,
+                font=self.font,
+            )
+        else:
+            line_text = p_text + "   " + days_text
+            write(
+                im_black,
+                p_count_pos,
+                (im_width, im_height),
+                line_text,
+                font=self.font,
+            )
 
         # draw border around module
         draw_border(
@@ -194,6 +210,7 @@ if __name__ == "__main__":
             "size": [800, 250],
             "prescription_days": 28,
             "credentials_file": "C:\\development\\credentials.json",
+            "track_d": False,
             "padding_x": 10,
             "padding_y": 10,
             "fontsize": 45,
