@@ -211,7 +211,14 @@ class Weather(inkycal_module):
             logger.info("Connection test passed")
         else:
             logger.exception("Network could not be reached :(")
-            raise
+            write(
+                im_black,
+                (0, 0),
+                (im_width, im_height),
+                "Network could not be reached :(",
+                font=self.font,
+            )
+            return im_black, im_colour
 
         # Lookup-table for weather icons and weather codes
         weathericons = {
@@ -324,15 +331,30 @@ class Weather(inkycal_module):
         icon_fc4 = (col7, row1 + row_height)
         temp_fc4 = (col7, row3)
 
-        # Create current-weather and weather-forecast objects
-        if self.location.isdigit():
-            logging.debug("looking up location by ID")
-            weather = self.owm.weather_at_id(int(self.location)).weather
-            forecast = self.owm.forecast_at_id(int(self.location), "3h")
-        else:
-            logging.debug("looking up location by string")
-            weather = self.owm.weather_at_place(self.location).weather
-            forecast = self.owm.forecast_at_place(self.location, "3h")
+        try:
+            # Create current-weather and weather-forecast objects
+            if self.location.isdigit():
+                logging.debug("looking up location by ID")
+                weather = self.owm.weather_at_id(int(self.location)).weather
+                forecast = self.owm.forecast_at_id(int(self.location), "3h")
+            else:
+                logging.debug("looking up location by string")
+                weather = self.owm.weather_at_place(self.location).weather
+                forecast = self.owm.forecast_at_place(self.location, "3h")
+        except:
+            weather = None
+            forecast = None
+
+        if not weather or not forecast:
+            logger.exception("Error retrieving weather forecast")
+            write(
+                im_black,
+                (0, 0),
+                (im_width, im_height),
+                "Error retrieving weather forecast",
+                font=self.font,
+            )
+            return im_black, im_colour
 
         # Get current time
         now = arrow.utcnow()
