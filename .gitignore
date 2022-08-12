@@ -4,6 +4,7 @@ inkyvenv/
 logs/*.*
 %SystemDrive%/
 /db/*.db
+server/app/static/images/dashboard.png
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

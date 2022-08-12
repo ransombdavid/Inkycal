@@ -114,7 +114,8 @@ class Inkycal:
             except FileNotFoundError:
                 print(
                     "No settings file found in given path\n"
-                    "Please double check your settings_path"
+                    "Please double check your settings_path\n"
+                    f"{settings_path}"
                 )
                 return
 

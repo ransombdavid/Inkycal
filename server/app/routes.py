@@ -63,6 +63,11 @@ def module_config():
     )
 
 
+@app.route("/dashboard_image")
+def dashboard_image():
+    return render_template("screencapture.html")
+
+
 @app.route("/set_pill_counts", methods=["POST"])
 def set_pull_counts():
     pass

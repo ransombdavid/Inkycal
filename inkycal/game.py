@@ -151,6 +151,11 @@ class InkyCalWrapper:
     def _add_refresh_icon(self):
         background_image = self.inky._merge_bands()
 
+        # make a copy of the dashboard image in the flask server
+        background_image.save(
+            f"{top_level}/server/app/static/images/dashboard.png", "PNG"
+        )
+
         # add refresh icon to center
         refresh_image = Image.open(f"{self.inky.image_folder}/refresh_icon.png")
         background_size = background_image.size

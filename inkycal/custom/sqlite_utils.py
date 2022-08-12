@@ -146,7 +146,7 @@ def get_inkycal_settings_file(db_file_path: str = DEFAULT_INKYCAL_DB_PATH):
                 return str(results[0][0])
 
     # if there is not a row for settings file, make a new one
-    set_inkycal_settings_file(db_file_path, DEFAULT_SETTINGS_PATH)
+    set_inkycal_settings_file(DEFAULT_SETTINGS_PATH, db_file_path)
     return DEFAULT_SETTINGS_PATH
 
 
