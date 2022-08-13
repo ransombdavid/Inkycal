@@ -1,20 +1,14 @@
-pyowm==3.1.1                    # weather
-Pillow>=7.1.1                   # imaging
-icalendar==4.0.6                # iCalendar parsing
-feedparser==6.0.8               # parse RSS-feeds
-#numpy>=1.18.2                   # image pre-processing #pre-installed on Raspbian, omitting
-arrow==0.17.0 	                # time operations
-Flask==2.1.2                    # webserver
-Flask-WTF==1.0.1                # webforms
-todoist-python==8.1.2           # todoist api
-yfinance>=0.1.62                # yahoo stocks
-matplotlib==3.4.2               # plotting
-pygame~=2.1.2                   # debug display
-keyboard~=0.13.5
-google-api-python-client
-google-auth-httplib2
-google-auth-oauthlib
-gspread
-oauth2client
-black
-pre-commit
+arrow==1.2.2 # time operations
+black==22.6.0 # code styling
+Flask==2.2.2 # webserver
+Flask-WTF==1.0.1 # webforms
+google-api-python-client==2.56.0 # google sheets and calendar
+google-auth-httplib2==0.1.0 # google sheets and calendar
+google-auth-oauthlib==0.5.2 # google sheets and calendar
+gspread==5.4.0 # google sheets
+keyboard==0.13.5 # capture keyboard presses
+oauth2client==4.1.3 # google sheets and calendar
+Pillow==9.2.0 # imaging
+pre-commit==2.20.0 # code styling
+pygame==2.1.2 # debug display
+pyowm==3.3.0 # weather
