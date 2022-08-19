@@ -129,6 +129,12 @@ class PillCounter(inkycal_module):
 
         # Get current time
         now = arrow.now(self.timezone)
+
+        # if it's before 8AM, use yesterday's date so the count is closer to accurate
+        # in case erin is up late
+        if now.hour <= 8:
+            now = now.shift(days=-1)
+
         date_string = now.format("MM/DD/YY")
 
         logger.debug("getting pill count")
